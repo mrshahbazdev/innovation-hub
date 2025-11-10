@@ -14,11 +14,17 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
+use Filament\Schemas\Schema; // v4 syntax
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+
+// --- NAYE IMPORTS HUMNE ADD KIYE HAIN ---
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\ImageColumn;
+use Illuminate\Support\Facades\Hash;
 
 class UserResource extends Resource
 {
@@ -38,20 +44,33 @@ class UserResource extends Resource
                     ->label('Email address')
                     ->email()
                     ->required(),
-                DateTimePicker::make('email_verified_at'),
+
                 TextInput::make('password')
                     ->password()
-                    ->required(),
-                TextInput::make('current_team_id')
-                    ->numeric(),
-                TextInput::make('profile_photo_path'),
-                Textarea::make('two_factor_secret')
+                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
+                    ->dehydrated(fn (?string $state): bool => filled($state))
+                    // Sirf 'Create' page par required hai
+                    ->required(fn (string $operation): bool => $operation === 'create')
                     ->columnSpanFull(),
-                Textarea::make('two_factor_recovery_codes')
+
+                Select::make('current_team_id')
+                    ->label('Current Team')
+                    ->relationship('currentTeam', 'name')
+                    ->searchable()
+                    ->preload(),
+
+                // --- 3. PROFILE PHOTO (FIXED) ---
+                FileUpload::make('profile_photo_path')
+                    ->label('Profile Photo')
+                    ->image()
+                    ->imageEditor()
+                    ->disk('public')
+                    ->directory('profile-photos')
                     ->columnSpanFull(),
-                DateTimePicker::make('two_factor_confirmed_at'),
+
                 Toggle::make('is_admin')
                     ->required(),
+
             ]);
     }
 
@@ -60,32 +79,28 @@ class UserResource extends Resource
         return $table
             ->recordTitleAttribute('name')
             ->columns([
+                ImageColumn::make('profile_photo_path')
+                    ->label('Photo')
+                    ->disk('public')
+                    ->circular(),
+
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
+
+                TextColumn::make('currentTeam.name')
+                    ->label('Current Team')
                     ->sortable(),
-                TextColumn::make('current_team_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('profile_photo_path')
-                    ->searchable(),
+
+                IconColumn::make('is_admin')
+                    ->boolean(),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('two_factor_confirmed_at')
-                    ->dateTime()
-                    ->sortable(),
-                IconColumn::make('is_admin')
-                    ->boolean(),
             ])
             ->filters([
                 //

@@ -4,90 +4,96 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Idea;
-use Livewire\Attributes\Rule; // Livewire 3 ka naya validation attribute
+use App\Models\Team; // <-- 1. Import Team model
+use Livewire\Attributes\Rule;
 use Livewire\Attributes\Layout;
-#[Layout('layouts.guest')]
+
+#[Layout('layouts.app')] // <-- 2. Change layout to 'layouts.app'
 class IdeaSubmissionForm extends Component
 {
-    // Form ka current step manage karne ke liye
     public $currentStep = 1;
 
-    // --- Step 1 Data ---
-    #[Rule('required|string|max:100')] // 4 lafzon ki had 100 characters rakhi hai
+    // --- 3. NEW PROPERTIES ---
+    public $teams; // To hold all teams
+    #[Rule('required|exists:teams,id')]
+    public $selectedTeamId = null; // To store the user's choice
+
+    // --- OLD PROPERTIES (Validation moved to submitForm) ---
     public $problem_short = '';
-
-    // --- Step 2 Data ---
-    #[Rule('required|string|min:10')]
     public $goal = '';
-
-    // --- Step 3 Data ---
-    #[Rule('required|string|min:20')]
     public $problem_detail = '';
-
-    // --- Step 4 Data ---
-    #[Rule('nullable|email')]
     public $contact_info = '';
 
     /**
-     * Step 1 ki validation aur agle step par jaana
+     * 4. Load all available teams when the component starts
      */
+    public function mount()
+    {
+        $this->teams = Team::all();
+
+        // Auto-fill contact info if user is logged in
+        $this->contact_info = auth()->user()->email;
+    }
+
     public function firstStepSubmit()
     {
-        $this->validateOnly('problem_short');
+        $this->validate(['selectedTeamId']); // Validate Step 1
         $this->currentStep = 2;
     }
 
-    /**
-     * Step 2 ki validation aur agle step par jaana
-     */
     public function secondStepSubmit()
     {
-        $this->validateOnly('goal');
+        $this->validate(['problem_short']); // Validate Step 2
         $this->currentStep = 3;
     }
 
-    /**
-     * Step 3 ki validation aur agle step par jaana
-     */
     public function thirdStepSubmit()
     {
-        $this->validateOnly('problem_detail');
+        $this->validate(['goal']); // Validate Step 3
         $this->currentStep = 4;
     }
 
-    /**
-     * Form ko pichle step par le jaana
-     */
+    public function fourthStepSubmit()
+    {
+        $this->validate(['problem_detail']); // Validate Step 4
+        $this->currentStep = 5;
+    }
+
     public function previousStep()
     {
         $this->currentStep--;
     }
 
     /**
-     * Aakhri step (Step 4) - Form submit karna aur database mein save karna
+     * 5. UPDATED Submit Function (Now Step 5)
      */
     public function submitForm()
     {
-        $this->validateOnly('contact_info');
+        // Validate all fields at the end
+        $validatedData = $this->validate([
+            'selectedTeamId' => 'required|exists:teams,id',
+            'problem_short' => 'required|string|max:100',
+            'goal' => 'required|string|min:10',
+            'problem_detail' => 'required|string|min:20',
+            'contact_info' => 'nullable|email',
+        ]);
 
-        // Data ko database mein save karein
+        // Create the Idea
         Idea::create([
-            // Hum farz karte hain ke public submissions team ID 1 ko jayengi
-            // Jetstream mein pehli team hamesha ID 1 hoti hai (Aapki Admin team)
-            'team_id' => 1,
-            'user_id' => auth()->id(), // Agar user login hai, toh ID save hogi, warna null
-            'submitter_type' => auth()->check() ? 'user' : 'visitor',
+            'team_id' => $this->selectedTeamId, // Use the selected team
+            'user_id' => auth()->id(),
+            'submitter_type' => 'user',
             'contact_info' => $this->contact_info,
-
-            // Form se aaya hua data
             'problem_short' => $this->problem_short,
             'goal' => $this->goal,
             'problem_detail' => $this->problem_detail,
-
-            'status' => 'new', // Naya status
+            'status' => 'new',
         ]);
 
-        // Success step dikhayein
+        // Attach the user to this team (so they can see it later)
+        auth()->user()->teams()->syncWithoutDetaching($this->selectedTeamId);
+
+        // Redirect to the thank-you page
         return $this->redirect(route('thank-you'), navigate: true);
     }
 

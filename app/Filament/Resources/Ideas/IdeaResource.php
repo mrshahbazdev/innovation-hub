@@ -46,9 +46,19 @@ class IdeaResource extends Resource
                 Textarea::make('problem_detail')
                     ->required()
                     ->columnSpanFull(),
-                TextInput::make('status')
+
+                Select::make('status')
+                    ->options([
+                        'new' => 'New',
+                        'pending_review' => 'Pending Review',
+                        'pending_pricing' => 'Pending Pricing',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                        'completed' => 'Completed',
+                    ])
                     ->required()
                     ->default('new'),
+
                 TextInput::make('schmerz')
                     ->required()
                     ->numeric()
@@ -78,37 +88,45 @@ class IdeaResource extends Resource
             ->recordTitleAttribute('problem_short')
             ->columns([
                 TextColumn::make('user.name')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('team.name')
-                    ->numeric()
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('submitter_type')
                     ->searchable(),
                 TextColumn::make('contact_info')
                     ->searchable(),
                 TextColumn::make('problem_short')
+                    ->label('Idea')
                     ->searchable(),
                 TextColumn::make('status')
                     ->searchable(),
                 TextColumn::make('schmerz')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('prio_1')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('prio_2')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('umsetzung')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('kosten')
                     ->numeric()
-                    ->sortable(),
+                    ->money('usd')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('dauer')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -117,6 +135,7 @@ class IdeaResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
             ])
             ->filters([
                 //
