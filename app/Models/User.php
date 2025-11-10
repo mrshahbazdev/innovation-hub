@@ -16,6 +16,7 @@ use Intervention\Image\Laravel\Facades\Image;
 use Intervention\Image\Encoders\JpegEncoder;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Spatie\Permission\Traits\HasRoles; // <-- 1. YEH IMPORT ADD KAREIN
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -27,6 +28,7 @@ class User extends Authenticatable implements FilamentUser
     use HasTeams;
     use Notifiable;
     use TwoFactorAuthenticatable;
+    use HasRoles; // <-- 2. YEH TRAIT ADD KAREIN
 
     protected $fillable = [
         'name',

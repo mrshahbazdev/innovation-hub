@@ -20,7 +20,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-// --- NAYE IMPORTS HUMNE ADD KIYE HAIN ---
+// --- NAYE IMPORTS ---
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\ImageColumn;
@@ -30,7 +30,7 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -44,22 +44,12 @@ class UserResource extends Resource
                     ->label('Email address')
                     ->email()
                     ->required(),
-
                 TextInput::make('password')
                     ->password()
                     ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
                     ->dehydrated(fn (?string $state): bool => filled($state))
-                    // Sirf 'Create' page par required hai
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->columnSpanFull(),
-
-                Select::make('current_team_id')
-                    ->label('Current Team')
-                    ->relationship('currentTeam', 'name')
-                    ->searchable()
-                    ->preload(),
-
-                // --- 3. PROFILE PHOTO (FIXED) ---
                 FileUpload::make('profile_photo_path')
                     ->label('Profile Photo')
                     ->image()
@@ -67,10 +57,21 @@ class UserResource extends Resource
                     ->disk('public')
                     ->directory('profile-photos')
                     ->columnSpanFull(),
-
+                Select::make('current_team_id')
+                    ->label('Current Team')
+                    ->relationship('currentTeam', 'name')
+                    ->searchable()
+                    ->preload(),
                 Toggle::make('is_admin')
                     ->required(),
 
+                // --- 1. YEH NAYA ROLES DROPDOWN ADD HUA HAI ---
+                Select::make('roles')
+                    ->relationship('roles', 'name') // 'roles' function (jo HasRoles trait se aaya)
+                    ->multiple() // User ke paas ek se zyada roles ho sakte hain
+                    ->preload()
+                    ->searchable()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -83,19 +84,22 @@ class UserResource extends Resource
                     ->label('Photo')
                     ->disk('public')
                     ->circular(),
-
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),
-
                 TextColumn::make('currentTeam.name')
                     ->label('Current Team')
                     ->sortable(),
-
                 IconColumn::make('is_admin')
                     ->boolean(),
+
+                // --- 2. YEH NAYA ROLES COLUMN ADD HUA HAI ---
+                TextColumn::make('roles.name')
+                    ->label('Roles')
+                    ->badge() // Roles ko badges ki tarah dikhayega
+                    ->searchable(),
 
                 TextColumn::make('created_at')
                     ->dateTime()

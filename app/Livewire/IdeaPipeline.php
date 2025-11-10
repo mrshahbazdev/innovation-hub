@@ -13,7 +13,6 @@ class IdeaPipeline extends Component
     use WithPagination;
 
     public $editingIdeaId = null;
-
     public $search = '';
     public $filterStatus = '';
     public $sortBy = 'status';
@@ -27,8 +26,14 @@ class IdeaPipeline extends Component
     public $prio_1;
     public $prio_2;
     public $umsetzung;
-    public $status; // <-- YEH NAYI PROPERTY ADD HUI HAI
+    public $status;
 
+    // --- 1. NAYI PROPERTIES ADD HUI HAIN ---
+    public $problem_short;
+    public $goal;
+    public $problem_detail;
+
+    // --- HOOKS (Pagination reset karne ke liye) ---
     public function updatingSearch()
     {
         $this->resetPage();
@@ -46,8 +51,6 @@ class IdeaPipeline extends Component
         $idea = Idea::find($ideaId);
         if ($idea) {
             $this->editingIdeaId = $ideaId;
-
-            // Database se values nikaal kar form properties mein daalein
             $this->schmerz = $idea->schmerz;
             $this->loesung = $idea->loesung;
             $this->kosten = $idea->kosten;
@@ -55,7 +58,12 @@ class IdeaPipeline extends Component
             $this->prio_1 = $idea->prio_1;
             $this->prio_2 = $idea->prio_2;
             $this->umsetzung = $idea->umsetzung;
-            $this->status = $idea->status; // <-- YEH NAYI LINE ADD HUI HAI
+            $this->status = $idea->status;
+
+            // --- 2. NAYI PROPERTIES LOAD HONGY ---
+            $this->problem_short = $idea->problem_short;
+            $this->goal = $idea->goal;
+            $this->problem_detail = $idea->problem_detail;
         }
     }
 
@@ -69,7 +77,7 @@ class IdeaPipeline extends Component
     }
 
     /**
-     * "Save" button dabane par (Updated Logic)
+     * "Save" button dabane par
      */
     public function saveIdea($ideaId)
     {
@@ -80,21 +88,30 @@ class IdeaPipeline extends Component
         $team = $user->currentTeam;
         $dataToSave = [];
 
-        // Check karein agar user ke paas 'update-yellow' permission hai
-        if ($user->hasTeamPermission($team, 'update-yellow')) {
+        // --- 3. NAYA LOGIC: Admin ya Owner core details edit kar sakta hai ---
+        if ($user->is_admin || $user->id === $idea->user_id) {
+            $validated = $this->validate([
+                'problem_short' => 'required|string|max:100',
+                'goal' => 'required|string|min:10',
+                'problem_detail' => 'required|string|min:20',
+            ]);
+            $dataToSave = array_merge($dataToSave, $validated);
+        }
+
+        // Team "Work-Bees" (Yellow) permissions
+        if ($user->hasTeamPermission($team, 'update-yellow') || $user->is_admin) {
             $validated = $this->validate([
                 'schmerz' => 'nullable|integer|min:0|max:10',
                 'prio_1' => 'nullable|numeric',
                 'prio_2' => 'nullable|numeric',
                 'umsetzung' => 'nullable|integer|min:0',
-                // --- YEH LINE ADD HUI HAI ---
                 'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
             ]);
             $dataToSave = array_merge($dataToSave, $validated);
         }
 
-        // Check karein agar user ke paas 'update-red' permission hai
-        if ($user->hasTeamPermission($team, 'update-red')) {
+        // Team "Developer" (Red) permissions
+        if ($user->hasTeamPermission($team, 'update-red') || $user->is_admin) {
             $validated = $this->validate([
                 'loesung' => 'nullable|string|max:1000',
                 'kosten' => 'nullable|numeric|min:0',
@@ -111,51 +128,53 @@ class IdeaPipeline extends Component
         $this->resetErrorBag();
     }
 
-    // ... (sortBy function waisa hi) ...
-    public function sortBy($field)
+    /**
+     * Idea delete karne ka function
+     */
+    public function deleteIdea($ideaId)
     {
-        if ($this->sortBy === $field) {
-            $this->sortDir = $this->sortDir === 'asc' ? 'desc' : 'asc';
+        $idea = Idea::find($ideaId);
+        if (!$idea) { return; }
+
+        $user = auth()->user();
+
+        // Sirf idea ka owner YA Super Admin hi delete kar sakta hai
+        if ($user->id === $idea->user_id || $user->is_admin) {
+            $idea->delete();
+            session()->flash('message', 'Idea deleted successfully.');
         } else {
-            $this->sortDir = 'asc';
+            session()->flash('error', 'You do not have permission to delete this idea.');
         }
-        $this->sortBy = $field;
+
+        $this->resetPage();
     }
 
     /**
-     * Page render karne wala function (waisa hi)
+     * Page render karne wala function
      */
     public function render()
     {
-        // Query shuru karein
         $ideasQuery = Idea::query();
+        $user = auth()->user();
 
-        // --- YEH NAYA LOGIC HAI ---
-        // Check karein ke user "Super Admin" NAHI hai
-        if (! auth()->user()->is_admin) {
-            // Agar admin nahi hai, toh sirf uski current team ke ideas dikhayein
-            $ideasQuery->where('team_id', auth()->user()->currentTeam->id);
+        if (! $user->is_admin) {
+            $currentTeam = $user->currentTeam;
+            $teamId = $currentTeam ? $currentTeam->id : null;
+            $ideasQuery->where('team_id', $teamId);
         }
-        // Agar woh admin hai, toh oopar wali line skip ho jayegi aur usse sab nazar aayega
-        // --- NAYA LOGIC KHATAM ---
 
-        // Filter: Status (Yeh pehle se mojood hai)
         if ($this->filterStatus) {
             $ideasQuery->where('status', $this->filterStatus);
         }
 
-        // Filter: Search (Yeh pehle se mojood hai)
         if ($this->search) {
             $ideasQuery->where(function($query) {
                 $query->where('problem_short', 'like', '%'.$this->search.'%')
-                    ->orWhere('problem_detail', 'like', '%'.$this->search.'%');
+                      ->orWhere('problem_detail', 'like', '%'.$this->search.'%');
             });
         }
 
-        // Sorting (Yeh pehle se mojood hai)
         $ideasQuery->orderBy($this->sortBy, $this->sortDir);
-
-        // Data fetch karein
         $ideas = $ideasQuery->paginate(15);
 
         return view('livewire.idea-pipeline', [

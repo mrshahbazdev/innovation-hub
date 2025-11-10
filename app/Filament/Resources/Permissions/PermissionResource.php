@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Filament\Resources\Roles;
+namespace App\Filament\Resources\Permissions;
 
-use App\Filament\Resources\Roles\Pages\ManageRoles;
-use Spatie\Permission\Models\Role;
+use App\Filament\Resources\Permissions\Pages\ManagePermissions;
+// --- 1. YEH LINE BADAL GAYI HAI ---
+use Spatie\Permission\Models\Permission; // 'App\Models\Permission' ke bajaye
+// ---
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -16,13 +18,12 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-// --- 1. NAYA IMPORT ADD HUA HAI ---
-use Filament\Forms\Components\Select;
-
-class RoleResource extends Resource
+class PermissionResource extends Resource
 {
-    protected static ?string $model = Role::class;
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-key';
+    protected static ?string $model = Permission::class; // <-- 2. MODEL FIX HO GAYA
+
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
@@ -33,14 +34,6 @@ class RoleResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
-
-                // --- 2. YEH NAYA PERMISSIONS DROPDOWN ADD HUA HAI ---
-                Select::make('permissions')
-                    ->relationship('permissions', 'name')
-                    ->multiple() // Ek role ke paas multiple permissions
-                    ->preload()
-                    ->searchable()
-                    ->columnSpanFull(),
             ]);
     }
 
@@ -51,13 +44,6 @@ class RoleResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
-
-                // --- 3. YEH NAYA COLUMN ADD HUA HAI ---
-                TextColumn::make('permissions_count') // Naya column
-                    ->label('Permissions')
-                    ->counts('permissions') // Permissions ki ginti (count)
-                    ->badge(), // Badge ki tarah dikhaye
-
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -80,7 +66,7 @@ class RoleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageRoles::route('/'),
+            'index' => ManagePermissions::route('/'),
         ];
     }
 }

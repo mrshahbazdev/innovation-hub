@@ -4,59 +4,55 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use App\Models\Idea;
-use App\Models\Team; // <-- 1. Import Team model
+use App\Models\Team;
 use Livewire\Attributes\Rule;
-use Livewire\Attributes\Layout;
+// Layout attribute hata diya gaya hai
 
-#[Layout('layouts.app')] // <-- 2. Change layout to 'layouts.app'
 class IdeaSubmissionForm extends Component
 {
+    public Team $team;
+
     public $currentStep = 1;
 
-    // --- 3. NEW PROPERTIES ---
-    public $teams; // To hold all teams
-    #[Rule('required|exists:teams,id')]
-    public $selectedTeamId = null; // To store the user's choice
-
-    // --- OLD PROPERTIES (Validation moved to submitForm) ---
+    // Rules ab yahan properties par define hain
+    #[Rule('required|string|max:100')]
     public $problem_short = '';
+
+    #[Rule('required|string|min:10')]
     public $goal = '';
+
+    #[Rule('required|string|min:20')]
     public $problem_detail = '';
+
+    #[Rule('nullable|email')]
     public $contact_info = '';
 
     /**
-     * 4. Load all available teams when the component starts
+     * Component load hone par
      */
-    public function mount()
+    public function mount(Team $team)
     {
-        $this->teams = Team::all();
-
-        // Auto-fill contact info if user is logged in
+        $this->team = $team;
         $this->contact_info = auth()->user()->email;
     }
 
+    // --- YEH HAIN TAMAM FIXED FUNCTIONS ---
     public function firstStepSubmit()
     {
-        $this->validate(['selectedTeamId']); // Validate Step 1
+        $this->validateOnly('problem_short'); // 'validate' ko 'validateOnly' se badal diya
         $this->currentStep = 2;
     }
 
     public function secondStepSubmit()
     {
-        $this->validate(['problem_short']); // Validate Step 2
+        $this->validateOnly('goal'); // 'validate' ko 'validateOnly' se badal diya
         $this->currentStep = 3;
     }
 
     public function thirdStepSubmit()
     {
-        $this->validate(['goal']); // Validate Step 3
+        $this->validateOnly('problem_detail'); // 'validate' ko 'validateOnly' se badal diya
         $this->currentStep = 4;
-    }
-
-    public function fourthStepSubmit()
-    {
-        $this->validate(['problem_detail']); // Validate Step 4
-        $this->currentStep = 5;
     }
 
     public function previousStep()
@@ -65,13 +61,12 @@ class IdeaSubmissionForm extends Component
     }
 
     /**
-     * 5. UPDATED Submit Function (Now Step 5)
+     * UPDATED Submit Function (Ab Step 4 hai)
      */
     public function submitForm()
     {
-        // Validate all fields at the end
+        // Yahan hum 'validate()' istemal kar sakte hain kyunke hum tamam rules ko ek saath validate kar rahe hain
         $validatedData = $this->validate([
-            'selectedTeamId' => 'required|exists:teams,id',
             'problem_short' => 'required|string|max:100',
             'goal' => 'required|string|min:10',
             'problem_detail' => 'required|string|min:20',
@@ -80,7 +75,7 @@ class IdeaSubmissionForm extends Component
 
         // Create the Idea
         Idea::create([
-            'team_id' => $this->selectedTeamId, // Use the selected team
+            'team_id' => $this->team->id,
             'user_id' => auth()->id(),
             'submitter_type' => 'user',
             'contact_info' => $this->contact_info,
@@ -90,10 +85,7 @@ class IdeaSubmissionForm extends Component
             'status' => 'new',
         ]);
 
-        // Attach the user to this team (so they can see it later)
-        auth()->user()->teams()->syncWithoutDetaching($this->selectedTeamId);
-
-        // Redirect to the thank-you page
+        // User ko thank you page par bhej dein
         return $this->redirect(route('thank-you'), navigate: true);
     }
 

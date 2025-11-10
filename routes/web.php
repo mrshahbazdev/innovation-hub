@@ -6,6 +6,7 @@ use App\Livewire\IdeaPipeline;
 use App\Livewire\IdeaDetail;
 use App\Livewire\SiteLogoManager;
 use App\Livewire\BrowseTeams;
+use App\Livewire\ViewTeam;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -34,6 +35,7 @@ Route::middleware([
     Route::get('/pipeline', IdeaPipeline::class)->name('pipeline');
     Route::get('/idea/{idea}', IdeaDetail::class)->name('idea.detail');
     Route::get('/site-logo', SiteLogoManager::class)->name('site.logo');
-    Route::get('/submit-idea', IdeaSubmissionForm::class)->name('submit-idea');
+   // Route::get('/submit-idea', IdeaSubmissionForm::class)->name('submit-idea');
     Route::get('/browse-teams', BrowseTeams::class)->name('teams.browse');
+    Route::get('/teams/{team}/view', ViewTeam::class)->name('teams.view');
 });

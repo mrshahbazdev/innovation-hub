@@ -16,9 +16,17 @@
                     <x-nav-link href="{{ route('pipeline') }}" :active="request()->routeIs('pipeline')">
                         {{ __('Innovation Pipeline') }}
                     </x-nav-link>
-                    <x-responsive-nav-link href="{{ route('teams.browse') }}" :active="request()->routeIs('teams.browse')">
+
+                    <x-nav-link href="{{ route('teams.browse') }}" :active="request()->routeIs('teams.browse')">
                         {{ __('Browse Teams') }}
-                    </x-responsive-nav-link>
+                    </x-nav-link>
+
+                    @if (Auth::user()->currentTeam)
+                        <x-nav-link href="{{ route('teams.view', Auth::user()->currentTeam) }}" :active="request()->routeIs('teams.view')">
+                            {{ __('Post Idea') }}
+                        </x-nav-link>
+                    @endif
+
                     {{-- <x-nav-link href="{{ route('site.logo') }}" :active="request()->routeIs('site.logo')">
                         {{ __('Site Logo') }}
                     </x-nav-link> --}}
@@ -32,7 +40,7 @@
                             <x-slot name="trigger">
                                 <span class="inline-flex rounded-md">
                                     <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none focus:bg-gray-50 active:bg-gray-50 transition ease-in-out duration-150">
-                                        {{ Auth::user()->currentTeam->name }}
+                                        {{ Auth::user()->currentTeam->name ?? 'Select Team' }}
 
                                         <svg class="ms-2 -me-0.5 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
@@ -47,16 +55,19 @@
                                         {{ __('Manage Team') }}
                                     </div>
 
-                                    <x-dropdown-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}">
-                                        {{ __('Team Settings') }}
-                                    </x-dropdown-link>
-
-                                    @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
-                                        <x-dropdown-link href="{{ route('teams.create') }}">
-                                            {{ __('Create New Team') }}
+                                    @if (Auth::user()->currentTeam)
+                                        <x-dropdown-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}">
+                                            {{ __('Team Settings') }}
                                         </x-dropdown-link>
-                                    @endcan
+                                    @endif
 
+                                    @if (auth()->user()->is_admin)
+                                        @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
+                                            <x-dropdown-link href="{{ route('teams.create') }}">
+                                                {{ __('Create New Team') }}
+                                            </x-dropdown-link>
+                                        @endcan
+                                    @endif
                                     @if (Auth::user()->allTeams()->count() > 1)
                                         <div class="border-t border-gray-200"></div>
 
@@ -144,9 +155,17 @@
             <x-responsive-nav-link href="{{ route('pipeline') }}" :active="request()->routeIs('pipeline')">
                 {{ __('Innovation Pipeline') }}
             </x-responsive-nav-link>
-            <x-nav-link href="{{ route('teams.browse') }}" :active="request()->routeIs('teams.browse')">
+
+            <x-responsive-nav-link href="{{ route('teams.browse') }}" :active="request()->routeIs('teams.browse')">
                 {{ __('Browse Teams') }}
-            </x-nav-link>
+            </x-responsive-nav-link>
+
+            @if (Auth::user()->currentTeam)
+                <x-responsive-nav-link href="{{ route('teams.view', Auth::user()->currentTeam) }}" :active="request()->routeIs('teams.view')">
+                    {{ __('Post Idea') }}
+                </x-responsive-nav-link>
+            @endif
+
             {{-- <x-responsive-nav-link href="{{ route('site.logo') }}" :active="request()->routeIs('site.logo')">
                 {{ __('Site Logo') }}
             </x-responsive-nav-link> --}}
@@ -193,16 +212,19 @@
                         {{ __('Manage Team') }}
                     </div>
 
-                    <x-responsive-nav-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}" :active="request()->routeIs('teams.show')">
-                        {{ __('Team Settings') }}
-                    </x-responsive-nav-link>
-
-                    @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
-                        <x-responsive-nav-link href="{{ route('teams.create') }}" :active="request()->routeIs('teams.create')">
-                            {{ __('Create New Team') }}
+                    @if (Auth::user()->currentTeam)
+                        <x-responsive-nav-link href="{{ route('teams.show', Auth::user()->currentTeam->id) }}" :active="request()->routeIs('teams.show')">
+                            {{ __('Team Settings') }}
                         </x-responsive-nav-link>
-                    @endcan
+                    @endif
 
+                    @if (auth()->user()->is_admin)
+                        @can('create', Laravel\Jetstream\Jetstream::newTeamModel())
+                            <x-responsive-nav-link href="{{ route('teams.create') }}" :active="request()->routeIs('teams.create')">
+                                {{ __('Create New Team') }}
+                            </x-responsive-nav-link>
+                        @endcan
+                    @endif
                     @if (Auth::user()->allTeams()->count() > 1)
                         <div class="border-t border-gray-200"></div>
 

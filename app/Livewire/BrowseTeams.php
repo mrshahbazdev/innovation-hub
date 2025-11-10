@@ -28,12 +28,12 @@ class BrowseTeams extends Component
         // Sirf 'Global' teams load karein (personal nahi)
         $this->teams = Team::where('personal_team', false)->get();
 
-        // User ki maujooda teams ki IDs load karein
-        $this->myTeamIds = auth()->user()->teams()->pluck('id')->toArray();
+        // User ki maujooda teams ki IDs load karein (FIXED LINE)
+        $this->myTeamIds = auth()->user()->teams()->pluck('teams.id')->toArray();
     }
 
     /**
-     * Team join karne ka function
+     * Team join karne ka function (UPDATED)
      */
     public function joinTeam($teamId)
     {
@@ -43,10 +43,23 @@ class BrowseTeams extends Component
         // User ko team se attach karein (Jetstream ka default role 'editor' hai)
         if ($team && !$user->belongsToTeam($team)) {
             $user->teams()->attach($team, ['role' => 'editor']);
+
+            // --- YEH NAYA CODE ADD HUA HAI ---
+            // Agar user ki koi current team nahi hai (jaise naya user),
+            // toh is team ko uski current (active) team bana dein.
+            if ($user->current_team_id === null) {
+                $user->forceFill([
+                    'current_team_id' => $team->id,
+                ])->save();
+            }
+            // --- NAYA CODE KHATAM ---
         }
 
         // List ko refresh karein
         $this->loadTeams();
+
+        // Page ko refresh karein taake navigation menu update ho
+        $this->dispatch('teamJoined');
     }
 
     /**
@@ -61,7 +74,7 @@ class BrowseTeams extends Component
         if ($team && $user->belongsToTeam($team)) {
             // Hum user ko uski current active team chhorne nahi denge
             if ($user->current_team_id == $team->id) {
-                // (Aap yahan error dikha sakte hain, lekin abhi ke liye skip karte hain)
+                session()->flash('error', 'You cannot leave your active team. Please switch teams first.');
                 return;
             }
             $user->teams()->detach($team);

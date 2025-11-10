@@ -18,7 +18,19 @@
                                 <div class="w-full flex items-center justify-between p-6 space-x-6">
                                     <div class="flex-1 truncate">
                                         <div class="flex items-center space-x-3">
-                                            <h3 class="text-gray-900 text-lg font-medium truncate">{{ $team->name }}</h3>
+
+                                            {{-- === YEH RAHA NAYA LOGIC === --}}
+                                            @if(in_array($team->id, $myTeamIds))
+                                                {{-- Agar member hai, toh link dikhayein --}}
+                                                <a href="{{ route('teams.view', $team) }}" class="text-indigo-600 hover:text-indigo-900 text-lg font-medium truncate">
+                                                    {{ $team->name }}
+                                                </a>
+                                            @else
+                                                {{-- Agar member nahi hai, toh saada text dikhayein --}}
+                                                <h3 class="text-gray-900 text-lg font-medium truncate">{{ $team->name }}</h3>
+                                            @endif
+                                            {{-- === NAYA LOGIC YAHAN KHATAM HOTA HAI === --}}
+
                                         </div>
                                         <p class="mt-1 text-gray-500 text-sm truncate">
                                             Owned by: {{ $team->owner->name }}
