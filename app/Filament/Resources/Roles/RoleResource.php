@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Roles;
 
 use App\Filament\Resources\Roles\Pages\ManageRoles;
-use App\Models\Role;
+// --- 1. YEH LINE BADAL GAYI HAI ---
+use Spatie\Permission\Models\Role; // Hum 'App\Models\Role' ke bajaye yeh istemal karenge
+// ---
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -20,7 +22,8 @@ class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    // --- 2. BEHTAR ICON ---
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-key';
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -30,7 +33,8 @@ class RoleResource extends Resource
             ->components([
                 TextInput::make('name')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->unique(ignoreRecord: true),
             ]);
     }
 
@@ -41,6 +45,11 @@ class RoleResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
+                // --- 3. CREATED_AT COLUMN ADD KAR DIYA ---
+                TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
