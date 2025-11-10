@@ -99,27 +99,16 @@
                         @forelse ($ideas as $idea)
                             <tr wire:key="desktop-{{ $idea->id }}">
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    @if ($editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
-                                        <input type="text" wire:model="problem_short" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
-                                        @error('problem_short') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
-                                    @else
-                                        <a href="{{ route('idea.detail', $idea) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
-                                            {{ $idea->problem_short }}
-                                        </a>
-                                    @endif
-
-                                    @if ($editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
-                                        <textarea wire:model="problem_detail" class="mt-2 block w-full border-gray-300 rounded-md shadow-sm text-sm" rows="2"></textarea>
-                                        @error('problem_detail') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
-                                    @else
-                                        <div class="text-sm text-gray-500 truncate" style="max-width: 250px;">{{ $idea->problem_detail }}</div>
-                                    @endif
+                                    <a href="{{ route('idea.detail', $idea) }}" class="text-sm font-medium text-indigo-600 hover:text-indigo-900">
+                                        {{ $idea->problem_short }}
+                                    </a>
+                                    <div class="text-sm text-gray-500 truncate" style="max-width: 250px;">{{ $idea->problem_detail }}</div>
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     @if ($editingIdeaId === $idea->id)
                                         <select wire:model="status"
                                                 class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                                                @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                                @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                                             <option value="new">New</option>
                                             <option value="pending_review">Pending Review</option>
                                             <option value="pending_pricing">Pending Pricing</option>
@@ -142,7 +131,7 @@
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-yellow-50">
                                     @if ($editingIdeaId === $idea->id)
-                                        <input type="number" wire:model="schmerz" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                        <input type="number" wire:model="schmerz" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                                         @error('schmerz') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->schmerz ?? '---' }}
@@ -150,7 +139,7 @@
                                 </td>
                                 <td class="px-3 py-2 text-sm text-gray-500 bg-red-50">
                                     @if ($editingIdeaId === $idea->id)
-                                        <textarea wire:model="loesung" class="block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))></textarea>
+                                        <textarea wire:model="loesung" class="block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))></textarea>
                                         @error('loesung') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->loesung ?? '---' }}
@@ -158,7 +147,7 @@
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-red-50">
                                     @if ($editingIdeaId === $idea->id)
-                                        <input type="text" wire:model="kosten" class="block w-24 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))>
+                                        <input type="text" wire:model="kosten" class="block w-24 border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))>
                                         @error('kosten') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         ${{ number_format($idea->kosten, 2) ?? '---' }}
@@ -166,7 +155,7 @@
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-red-50">
                                     @if ($editingIdeaId === $idea->id)
-                                        <input type="number" wire:model="dauer" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))>
+                                        <input type="number" wire:model="dauer" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))>
                                         @error('dauer') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->dauer ?? '---' }} days
@@ -174,7 +163,7 @@
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-yellow-50">
                                     @if ($editingIdeaId === $idea->id)
-                                        <input type="text" wire:model="prio_1" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                        <input type="text" wire:model="prio_1" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                                         @error('prio_1') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->prio_1 ?? '---' }}
@@ -182,7 +171,7 @@
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-yellow-50">
                                     @if ($editingIdeaId === $idea->id)
-                                        <input type="text" wire:model="prio_2" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                        <input type="text" wire:model="prio_2" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                                         @error('prio_2') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->prio_2 ?? '---' }}
@@ -190,7 +179,7 @@
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm font-bold text-gray-900 bg-yellow-50">
                                     @if ($editingIdeaId === $idea->id)
-                                        <input type="number" wire:model="umsetzung" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                        <input type="number" wire:model="umsetzung" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                                         @error('umsetzung') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->umsetzung ?? '---' }}
@@ -256,7 +245,7 @@
                         @if ($editingIdeaId === $idea->id)
                             <select wire:model="status"
                                     class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                                    @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                    @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                                 <option value="new">New</option>
                                 <option value="pending_review">Pending Review</option>
                                 <option value="pending_pricing">Pending Pricing</option>
@@ -312,76 +301,47 @@
                 </div>
 
                 <div class="mb-3">
-                    @if ($editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700">Problem</label>
-                            <input type="text" wire:model="problem_short" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
-                            @error('problem_short') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                    @else
-                        <a href="{{ route('idea.detail', $idea) }}" class="text-lg font-bold text-indigo-600 hover:text-indigo-900">
-                            {{ $idea->problem_short }}
-                        </a>
-                    @endif
-
-                    @if ($editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
-                         <div class="mt-2">
-                            <label class="block text-xs font-medium text-gray-700">Details</label>
-                            <textarea wire:model="problem_detail" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" rows="3"></textarea>
-                            @error('problem_detail') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                    @else
-                        <p class="text-sm text-gray-600">{{ $idea->problem_detail }}</p>
-                    @endif
+                    <a href="{{ route('idea.detail', $idea) }}" class="text-lg font-bold text-indigo-600 hover:text-indigo-900">
+                        {{ $idea->problem_short }}
+                    </a>
+                    <p class="text-sm text-gray-600">{{ $idea->problem_detail }}</p>
                 </div>
 
                 @if ($editingIdeaId === $idea->id)
                     <div class="border-t pt-4 mt-4 grid grid-cols-2 gap-4">
-
-                        @if (auth()->user()->is_admin || auth()->user()->id === $idea->user_id)
-                            <div class="col-span-2 space-y-2 p-2 bg-gray-50 rounded-md">
-                                <h4 class="font-medium text-sm text-gray-800">Core Details</h4>
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700">Goal</label>
-                                    <textarea wire:model="goal" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" rows="3"></textarea>
-                                    @error('goal') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                        @endif
-
                         <div class="space-y-2 p-2 bg-yellow-50 rounded-md">
                             <h4 class="font-medium text-sm text-yellow-800">Prioritization</h4>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700">Schmerz</label>
-                                <input type="number" wire:model="schmerz" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                <input type="number" wire:model="schmerz" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700">Prio 1</label>
-                                <input type="text" wire:model="prio_1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                <input type="text" wire:model="prio_1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700">Prio 2</label>
-                                <input type="text" wire:model="prio_2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                <input type="text" wire:model="prio_2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700">Umsetzung</label>
-                                <input type="number" wire:model="umsetzung" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
+                                <input type="number" wire:model="umsetzung" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-yellow'))>
                             </div>
                         </div>
                         <div class="space-y-2 p-2 bg-red-50 rounded-md">
                             <h4 class="font-medium text-sm text-red-800">Development</h4>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700">Kosten</label>
-                                <input type="text" wire:model="kosten" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))>
+                                <input type="text" wire:model="kosten" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))>
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700">Dauer</label>
-                                <input type="number" wire:model="dauer" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))>
+                                <input type="number" wire:model="dauer" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))>
                             </div>
                         </div>
                         <div class="col-span-2">
                             <label class="block text-xs font-medium text-gray-700">Lösung</label>
-                            <textarea wire:model="loesung" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))></textarea>
+                            <textarea wire:model="loesung" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(! auth()->user()->hasTeamPermission(auth()->user()->currentTeam, 'update-red'))></textarea>
                         </div>
                     </div>
                 @else
