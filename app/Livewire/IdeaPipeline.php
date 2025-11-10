@@ -127,20 +127,35 @@ class IdeaPipeline extends Component
      */
     public function render()
     {
-        $ideasQuery = Idea::where('team_id', auth()->user()->currentTeam->id);
+        // Query shuru karein
+        $ideasQuery = Idea::query();
 
+        // --- YEH NAYA LOGIC HAI ---
+        // Check karein ke user "Super Admin" NAHI hai
+        if (! auth()->user()->is_admin) {
+            // Agar admin nahi hai, toh sirf uski current team ke ideas dikhayein
+            $ideasQuery->where('team_id', auth()->user()->currentTeam->id);
+        }
+        // Agar woh admin hai, toh oopar wali line skip ho jayegi aur usse sab nazar aayega
+        // --- NAYA LOGIC KHATAM ---
+
+        // Filter: Status (Yeh pehle se mojood hai)
         if ($this->filterStatus) {
             $ideasQuery->where('status', $this->filterStatus);
         }
 
+        // Filter: Search (Yeh pehle se mojood hai)
         if ($this->search) {
             $ideasQuery->where(function($query) {
                 $query->where('problem_short', 'like', '%'.$this->search.'%')
-                      ->orWhere('problem_detail', 'like', '%'.$this->search.'%');
+                    ->orWhere('problem_detail', 'like', '%'.$this->search.'%');
             });
         }
 
+        // Sorting (Yeh pehle se mojood hai)
         $ideasQuery->orderBy($this->sortBy, $this->sortDir);
+
+        // Data fetch karein
         $ideas = $ideasQuery->paginate(15);
 
         return view('livewire.idea-pipeline', [

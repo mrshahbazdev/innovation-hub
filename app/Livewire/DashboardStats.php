@@ -20,26 +20,32 @@ class DashboardStats extends Component
      */
     public function mount()
     {
-        // Sirf current team ka data fetch karein
+        // Check karein ke user admin hai ya nahi
+        $isAdmin = auth()->user()->is_admin;
         $teamId = auth()->user()->currentTeam->id;
 
         // 1. Total Ideas
-        $this->totalIdeas = Idea::where('team_id', $teamId)->count();
+        $this->totalIdeas = Idea::when(! $isAdmin, function ($query) use ($teamId) {
+                                    $query->where('team_id', $teamId);
+                                })->count();
 
-        // 2. Pending Review (Jo 'new' hain)
-        $this->pendingReview = Idea::where('team_id', $teamId)
-                                   ->where('status', 'new')
-                                   ->count();
+        // 2. Pending Review
+        $this->pendingReview = Idea::where('status', 'new')
+                                ->when(! $isAdmin, function ($query) use ($teamId) {
+                                    $query->where('team_id', $teamId);
+                                })->count();
 
-        // 3. Pending Pricing (Jo 'pending_pricing' hain)
-        $this->pendingPricing = Idea::where('team_id', $teamId)
-                                    ->where('status', 'pending_pricing')
-                                    ->count();
+        // 3. Pending Pricing
+        $this->pendingPricing = Idea::where('status', 'pending_pricing')
+                                    ->when(! $isAdmin, function ($query) use ($teamId) {
+                                        $query->where('team_id', $teamId);
+                                    })->count();
 
-        // 4. Approved Budget (Approved projects ki 'kosten' ka sum)
-        $this->approvedBudget = Idea::where('team_id', $teamId)
-                                    ->where('status', 'approved')
-                                    ->sum('kosten');
+        // 4. Approved Budget
+        $this->approvedBudget = Idea::where('status', 'approved')
+                                    ->when(! $isAdmin, function ($query) use ($teamId) {
+                                        $query->where('team_id', $teamId);
+                                    })->sum('kosten');
     }
 
     public function render()
