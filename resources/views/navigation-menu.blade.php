@@ -16,6 +16,9 @@
                     <x-nav-link href="{{ route('pipeline') }}" :active="request()->routeIs('pipeline')">
                         {{ __('Innovation Pipeline') }}
                     </x-nav-link>
+                    <x-responsive-nav-link href="{{ route('teams.browse') }}" :active="request()->routeIs('teams.browse')">
+                        {{ __('Browse Teams') }}
+                    </x-responsive-nav-link>
                     {{-- <x-nav-link href="{{ route('site.logo') }}" :active="request()->routeIs('site.logo')">
                         {{ __('Site Logo') }}
                     </x-nav-link> --}}
@@ -141,6 +144,9 @@
             <x-responsive-nav-link href="{{ route('pipeline') }}" :active="request()->routeIs('pipeline')">
                 {{ __('Innovation Pipeline') }}
             </x-responsive-nav-link>
+            <x-nav-link href="{{ route('teams.browse') }}" :active="request()->routeIs('teams.browse')">
+                {{ __('Browse Teams') }}
+            </x-nav-link>
             {{-- <x-responsive-nav-link href="{{ route('site.logo') }}" :active="request()->routeIs('site.logo')">
                 {{ __('Site Logo') }}
             </x-responsive-nav-link> --}}
