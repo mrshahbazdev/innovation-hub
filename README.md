@@ -1,141 +1,248 @@
-# Innovation Pipeline Platform
+### Innovation Pipeline Platform
 
-This project is an advanced, custom-built web application designed to manage a company's internal innovation workflow. It provides a complete system for collecting, reviewing, pricing, and managing new ideas, from public submission to final approval.
+This is an advanced, custom-built web application to manage a company's internal innovation workflow. It features a dual-interface system:
 
-Built on the Laravel 12 / Livewire 3 stack, it features a secure, invitation-only environment with role-based permissions for different teams.
+User Frontend (Jetstream & Livewire): A portal for all users to register, browse, and join global teams. Once in a team, they can submit, edit, and delete their own ideas. Their editing rights on other's ideas are controlled by Jetstream Team Roles (like 'work-bees' or 'developer').
 
----
+Admin Panel (Filament): A powerful, secure backend for *Super Admins* (is_admin: true) and *Managers* (with spatie/laravel-permission roles) to control the entire application, including all users, all teams, all ideas, and all site permissions.
 
-## 🚀 Key Features
+🚀 Key Features
 
-* **KPI Dashboard:** A main dashboard showing "at-a-glance" statistics like *Total Ideas*, *Pending Review*, and *Total Approved Budget*.
-* **Advanced Pipeline Grid:** A fully responsive (desktop/mobile) data grid for managing all ideas.
-* **Live Search & Filtering:** Instantly search all ideas or filter them by their current **Status** (New, Approved, Pending Pricing, etc.).
-* **Click-to-Sort Columns:** Sort the entire pipeline by **Cost**, **Pain Score** (`Schmerz`), **Priority** (`Umsetzung`), or **Status**.
-* **Secure Role-Based Editing:**
-    * **Admins** can edit all fields.
-    * **Work-Bees** (Your Team) can only edit "Yellow" columns (Status, Schmerz, Prio).
-    * **Developers** can only edit "Red" columns (Lösung, Kosten, Dauer).
-* **Invitation-Only System:** Public registration is disabled. The Admin invites new team members and assigns them a role ("Work-Bees" or "Developer").
-* **Collaboration Hub:** A detailed page for each idea featuring:
-    * **Team Comments:** A real-time commenting system for discussion.
-    * **Full Activity Log (Audit Trail):** A complete history of all changes made to an idea (e.g., "User changed Cost from $800 to $950").
-* **Custom Branding:**
-    * A custom, professional welcome page.
-    * A modern, full-screen UI for all login/register pages.
-    * A dedicated "Site Logo Manager" to upload the company logo.
-* **Image Compression:** All user profile photos and site logos are automatically compressed (using `Intervention/Image`) to ensure fast load times.
+### User Frontend Features
 
-## 💻 Tech Stack
+User Registration: Users can register via the public /register link. New users do not get a personal team.
 
-* **Framework:** Laravel 12
-* **UI:** Livewire 3, Tailwind CSS
-* **Auth & Teams:** Laravel Jetstream (Teams Stack)
-* **Key Packages:**
-    * `spatie/laravel-activitylog` (for history/audit trails)
-    * `intervention/image-laravel` (for image compression)
+Global Team Browser: A dedicated /browse-teams page where users can see all available teams (created by the Admin) and join/leave them.
 
----
+Active Team Submissions: A *Post Idea* link in the navigation menu that allows users to submit ideas directly to their currently active team (via the /teams/{team}/view page).
 
-## 🔧 Installation (Local Development)
+User-Facing Pipeline: A responsive /pipeline page where users can see ideas.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://your-repository-url.com/innovation-hub.git](https://your-repository-url.com/innovation-hub.git)
-    cd innovation-hub
-    ```
+Super Admins see all ideas from all teams.
 
-2.  **Install PHP Dependencies:**
-    ```bash
-    composer install
-    ```
+Normal Users see only the ideas from their currently active team.
 
-3.  **Install JS Dependencies:**
-    ```bash
-    npm install
-    npm run dev
-    ```
+Ownership & Permissions:
 
-4.  **Create Environment File:**
-    * Copy the example `.env` file.
-    ```bash
-    cp .env.example .env
-    ```
+Users can edit and delete their own ideas.
 
-5.  **Generate App Key:**
-    ```bash
-    php artisan key:generate
-    ```
+Users can get *Edit* rights on other's ideas if they are given a specific Jetstream role (like 'work-bees') within that team.
 
-6.  **Configure `.env` File:**
-    * Update your `DB_` settings (e.G., `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`).
-    * Set `MAIL_MAILER=log` for local testing (this will write invitation emails to `storage/logs/laravel.log`).
-    * Set `APP_URL=http://127.0.0.1:8000` (or your local URL).
+Detailed Idea View: A full page for each idea with a Comments Section and a full Activity Log (History).
 
-7.  **Run Database Migrations:**
-    * This will create all tables (`users`, `teams`, `ideas`, `activity_log`, etc.).
-    ```bash
-    php artisan migrate
-    ```
+Admin Panel (/admin) Features
 
-8.  **Create Storage Link:**
-    * This is **critical** for viewing the site logo and profile photos.
-    ```bash
-    php artisan storage:link
-    ```
+Powered by Filament (v4): A beautiful, fast, and secure admin panel.
 
-9.  **Run the Server:**
-    * **Important:** On Windows, you may need to run this in a terminal **"As Administrator"** for the `storage:link` to work correctly.
-    ```bash
-    php artisan serve
-    ```
+Super Admin Access: The panel is only accessible to users with the is_admin flag set to true or who have the access_admin_panel permission.
 
----
+Dynamic Role & Permission System (Spatie):
 
-## 🔑 Getting Started: Creating the First Admin
+Full **CRUD** (Create, Read, Update, Delete) management for Permissions (e.g., viewAny Idea).
 
-Public registration is disabled. You must create the first user (the Admin) manually using Tinker.
+Full **CRUD** management for Roles (e.g., *Manager*, *HR*).
 
-1.  Run Tinker:
-    ```bash
-    php artisan tinker
-    ```
+Ability to assign any combination of permissions to any role.
 
-2.  Paste the following code into Tinker and press Enter. This will create your Admin user and their first team.
+Full User Management:
 
-    ```php
-    // 1. Create the Admin User
-    $user = App\Models\User::create([
-        'name' => 'Admin User', // Change this to your name
-        'email' => 'admin@example.com', // Change this to your email
-        'password' => Hash::make('password') // Change 'password' to a secure password
-    ]);
+Full **CRUD** management for all Users.
 
-    // 2. Create the User's Personal Team
-    $team = App\Models\Team::forceCreate([
-        'user_id' => $user->id,
-        'name' => $user->name."'s Team",
-        'personal_team' => true,
-    ]);
+Ability to assign spatie roles (like *Manager*) to users.
 
-    // 3. Attach the User to the Team as Admin
-    $user->teams()->attach($team, ['role' => 'admin']);
-    $user->current_team_id = $team->id;
-    $user->save();
+Ability to set a user's is_admin status.
 
-    echo 'Admin user created successfully!';
-    ```
+Ability to manage profile photos and team assignments.
 
-3.  Type `exit` to leave Tinker.
+Full Team Management:
 
-4.  You can now log in at `http://127.0.0.1:8000/login` with the email and password you just created.
+Full **CRUD** management for all Teams.
 
-## 🚀 Workflow
+Form is simplified so Admins can create global teams without worrying about user_id.
 
-1.  Log in as the Admin user.
-2.  Go to **"Team Settings"** (in the top-right user menu).
-3.  Invite new team members using their email and assign them the **"Work-Bees"** or **"Developer"** role.
-4.  Find the invitation links in `storage/logs/laravel.log`.
-5.  Send the links to your team members so they can register.
-6.  Start submitting ideas via the **`/submit-idea`** page.
-7.  Manage all incoming ideas from the **`/pipeline`** page.
+Full Idea Management:
+
+Full, filterable, and searchable table of all ideas in the system.
+
+Columns are responsive for mobile use.
+
+### General Features
+
+Custom Branding: Custom homepage, advanced full-screen background login/register UI, and a *Site Logo Manager*.
+
+Image Compression: All user profile photos and the site logo are automatically compressed on upload using Intervention/Image.
+
+💻 Tech Stack
+
+Framework: Laravel 12
+
+UI: Livewire 4, Tailwind **CSS**, Alpine.js
+
+User Panel: Laravel Jetstream (Teams Stack)
+
+Admin Panel: Filament 4
+
+Roles & Permissions: spatie/laravel-permission (for Admin Panel) & Jetstream Roles (for Frontend)
+
+Image Handling: intervention/image-laravel
+
+🔧 Installation (Local Development)
+
+Clone the repository:
+
+git clone [https://github.com/mrshahbazdev/innovation-hub.git](https://github.com/mrshahbazdev/innovation-hub.git) cd innovation-hub
+
+Install **PHP** Dependencies (with Filament v4):
+
+composer install
+
+Install JS Dependencies:
+
+npm install npm run build
+
+Create Environment File:
+
+cp .env.example .env
+
+Generate App Key:
+
+php artisan key:generate
+
+Configure .env File:
+
+Update your DB_ settings.
+
+Set MAIL_MAILER=log (or your **SMTP** credentials).
+
+Set APP_URL=[http://**127**.0.0.1:**8000**](http://**127**.0.0.1:**8000**)
+
+Run Database Migrations:
+
+This will create all tables (users, teams, ideas, roles, permissions, activity_log, etc.).
+
+php artisan migrate
+
+Create Storage Link:
+
+Critical: This is required for viewing the site logo and profile photos.
+
+php artisan storage:link
+
+Run the Server:
+
+Important: On Windows, run your terminal *As Administrator* for the storage:link (symlink) to work correctly.
+
+php artisan serve
+
+🔑 Post-Installation Setup (Admin & Permissions)
+
+You must create the Super Admin and the core permissions manually.
+
+## Create Super Admin User
+
+Run Tinker:
+
+php artisan tinker
+
+Paste this code into Tinker and press Enter. This creates your admin user (is_admin: true) and gives them a personal team so they can also use the frontend.
+
+// 1. Create the Admin User with 'is_admin' flag
+$user = App\Models\User::create([
+    'name' => 'Mr Shahbaz', // Change this to your name
+    'email' => '[admin@example.com](mailto:admin@example.com)', // Change this to your email
+    'password' => Hash::make('password'), // Change this to a secure password
+    'is_admin' => true // This makes them a Super Admin
+]);
+
+// 2. Create the Admin's Personal Team
+$team = App\Models\Team::forceCreate([
+    'user_id' => $user->id,
+    'name' => $user->name.*'s Team*,
+    'personal_team' => true,
+]);
+
+// 3. Attach the User to the Team $user->teams()->attach($team, ['role' => 'admin']); $user->current_team_id = $team->id; $user->save();
+
+echo 'Super Admin user created successfully!';
+
+Type exit to leave Tinker.
+
+## Create Core Permissions
+
+Log in to the Admin Panel (/admin) with your new Super Admin account.
+
+Go to the *Permissions* page from the left menu.
+
+Click *New permission* and create all of the following permissions exactly as named:
+
+access_admin_panel (This is the *key* to the admin panel for other roles)
+
+viewAny Idea
+
+create Idea
+
+update Idea
+
+delete Idea
+
+viewAny User
+
+create User
+
+update User
+
+delete User
+
+viewAny Team
+
+create Team
+
+update Team
+
+delete Team
+
+viewAny Role
+
+create Role
+
+update Role
+
+delete Role
+
+## Clear Permission Cache (Critical)
+
+After creating all permissions, run this command in your terminal. This forces the application to recognize the new permissions.
+
+php artisan permission:cache-reset
+
+Your application is now fully set up.
+
+🚀 Workflow
+
+### Admin Workflow
+
+Log in to /admin.
+
+Go to *Teams* and create your global teams (e.g., *Sales Department*, *Developers*).
+
+Go to *Roles* and create a new role (e.g., *Team Manager*).
+
+Edit the *Team Manager* role and assign it permissions (e.g., access_admin_panel, viewAny Idea, update Idea).
+
+Go to *Users* and assign the *Team Manager* role to a user.
+
+(Optional) For frontend roles, go to the Frontend (/) -> *Team Settings* -> *Team Members* and assign Jetstream roles (like 'work-bees' or 'developer').
+
+### Normal User Workflow
+
+User registers at /register.
+
+User logs in and lands on the /dashboard.
+
+User goes to *Browse Teams* and joins one or more teams.
+
+User uses the top-right *Team Switcher* to select an active team.
+
+User clicks *Post Idea* (in nav menu) to submit an idea to their active team.
+
+User goes to the *Innovation Pipeline* to see ideas from that team, and can edit/delete their own submissions.
