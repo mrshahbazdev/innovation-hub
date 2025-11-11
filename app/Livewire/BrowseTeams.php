@@ -6,15 +6,12 @@ use Livewire\Component;
 use App\Models\Team;
 use Livewire\Attributes\Layout;
 
-#[Layout('layouts.app')] // Admin layout istemal karega
+#[Layout('layouts.app')]
 class BrowseTeams extends Component
 {
-    public $teams; // Tamam global teams hold karega
-    public $myTeamIds = []; // User jin teams mein hai, unki IDs
+    public $teams;
+    public $myTeamIds = [];
 
-    /**
-     * Component load hone par
-     */
     public function mount()
     {
         $this->loadTeams();
@@ -22,14 +19,26 @@ class BrowseTeams extends Component
 
     /**
      * Tamam teams aur user ki teams ko load karein
+     * (UPDATED LOGIC)
      */
     public function loadTeams()
     {
-        // Sirf 'Global' teams load karein (personal nahi)
+        $user = auth()->user();
         $this->teams = Team::where('personal_team', false)->get();
 
-        // User ki maujooda teams ki IDs load karein (FIXED LINE)
-        $this->myTeamIds = auth()->user()->teams()->pluck('teams.id')->toArray();
+        // --- YEH RAHA AAPKA FIX ---
+
+        // 1. Woh teams jinhein user ne join kiya hai (Member)
+        $memberTeamIds = $user->teams()->pluck('teams.id');
+
+        // 2. Woh teams jo Admin ne banayi hain (Owner)
+        $ownedTeamIds = Team::where('user_id', $user->id)
+                            ->where('personal_team', false) // Personal team ko chhor kar
+                            ->pluck('id');
+
+        // Donon lists ko milayein aur duplicates hatayein
+        $this->myTeamIds = $memberTeamIds->merge($ownedTeamIds)->unique()->toArray();
+        // --- FIX KHATAM ---
     }
 
     /**
@@ -40,25 +49,26 @@ class BrowseTeams extends Component
         $user = auth()->user();
         $team = Team::find($teamId);
 
-        // User ko team se attach karein (Jetstream ka default role 'editor' hai)
+        // --- YEH NAYA CHECK ADD HUA HAI ---
+        // Admin (ya koi bhi owner) apni hi team ko join nahi kar sakta
+        if ($team && $team->user_id == $user->id) {
+            $this->loadTeams(); // Sirf list refresh karein
+            return;
+        }
+        // --- CHECK KHATAM ---
+
+        // User ko team se attach karein
         if ($team && !$user->belongsToTeam($team)) {
             $user->teams()->attach($team, ['role' => 'editor']);
 
-            // --- YEH NAYA CODE ADD HUA HAI ---
-            // Agar user ki koi current team nahi hai (jaise naya user),
-            // toh is team ko uski current (active) team bana dein.
             if ($user->current_team_id === null) {
                 $user->forceFill([
                     'current_team_id' => $team->id,
                 ])->save();
             }
-            // --- NAYA CODE KHATAM ---
         }
 
-        // List ko refresh karein
         $this->loadTeams();
-
-        // Page ko refresh karein taake navigation menu update ho
         $this->dispatch('teamJoined');
     }
 
@@ -70,9 +80,15 @@ class BrowseTeams extends Component
         $user = auth()->user();
         $team = Team::find($teamId);
 
-        // User ko team se detach karein
+        // --- YEH NAYA CHECK ADD HUA HAI ---
+        // Admin (ya koi bhi owner) apni banayi hui team ko leave nahi kar sakta
+        if ($team && $team->user_id == $user->id) {
+             session()->flash('error', 'As the team owner, you cannot leave this team. You can only delete it from Team Settings.');
+            return;
+        }
+        // --- CHECK KHATAM ---
+
         if ($team && $user->belongsToTeam($team)) {
-            // Hum user ko uski current active team chhorne nahi denge
             if ($user->current_team_id == $team->id) {
                 session()->flash('error', 'You cannot leave your active team. Please switch teams first.');
                 return;
@@ -80,7 +96,6 @@ class BrowseTeams extends Component
             $user->teams()->detach($team);
         }
 
-        // List ko refresh karein
         $this->loadTeams();
     }
 

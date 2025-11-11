@@ -81,4 +81,30 @@ class User extends Authenticatable implements FilamentUser
     {
        return $this->is_admin || $this->hasPermissionTo('access_admin_panel');
     }
+    /**
+ * Determine if the user belongs to the given team.
+ * YEH FUNCTION JETSTREAM KE DEFAULT FUNCTION KO OVERRIDE KAREGA.
+ */
+public function belongsToTeam($team): bool
+{
+    // Agar user Super Admin hai, toh woh har team ka hissa hai.
+    if ($this->is_admin) {
+        return true;
+    }
+
+    // Agar team null hai (jaise naya user), toh false return karo
+    if (is_null($team)) {
+        return false;
+    }
+
+    // Normal check: Check karo ke user team ka owner hai
+    if ($this->is($team->owner)) {
+        return true;
+    }
+
+    // Normal check: Check karo ke user team ke members mein shamil hai
+    return $this->teams->contains(function ($t) use ($team) {
+        return $t->id === $team->id;
+    });
+}
 }

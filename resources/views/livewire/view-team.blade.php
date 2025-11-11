@@ -15,7 +15,6 @@
                 @livewire('idea-submission-form', ['team' => $team])
             </div>
 
-            {{-- (Future mein aap yahan is team ke purane ideas ki list bhi dikha sakte hain) --}}
 
         </div>
     </div>

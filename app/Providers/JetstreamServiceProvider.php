@@ -12,6 +12,12 @@ use App\Actions\Jetstream\UpdateTeamName;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Jetstream\Jetstream;
 
+// --- 1. YEH IMPORTS ZAROORI HAIN ---
+use Illuminate\Support\Facades\Gate;
+use App\Models\Team;
+use App\Policies\TeamPolicy;
+// ---
+
 class JetstreamServiceProvider extends ServiceProvider
 {
     /**
@@ -27,29 +33,16 @@ class JetstreamServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Yeh function ab tamam roles (admin, editor, work-bees) ko configure karega
         $this->configurePermissions();
 
-        // --- YAHAN SE ROLES ADD KAREIN ---
-        Jetstream::role('admin', 'Administrator', [
-            '*',
-        ])->description('Administrator users can perform any action.');
+        // --- 2. YEH NAYI LINE AAPKA 403 ERROR FIX KAREGI ---
+        // Yeh Jetstream ko batayegi ke hamari custom 'TeamPolicy' istemal karo
+        Gate::policy(Team::class, TeamPolicy::class);
+        // ---
 
-        Jetstream::role('editor', 'Editor', [
-            'read',
-            'create',
-            'update',
-        ])->description('Editor users have the ability to read, create, and update.');
-
-        Jetstream::role('work-bees', 'Work-Bees', [
-            'read',
-            'update-yellow',
-        ])->description('Can edit project prioritization (Yellow).');
-
-        Jetstream::role('developer', 'Developer', [
-            'read',
-            'update-red',
-        ])->description('Can edit project costs (Red).');
-        // --- YAHAN TAK ---
+        // --- 3. DUPLICATE ROLES YAHAN SE HATA DIYE GAYE HAIN ---
+        // (admin aur editor roles yahan se hata diye gaye hain)
 
         Jetstream::createTeamsUsing(CreateTeam::class);
         Jetstream::updateTeamNamesUsing(UpdateTeamName::class);
@@ -67,6 +60,7 @@ class JetstreamServiceProvider extends ServiceProvider
     {
         Jetstream::defaultApiTokenPermissions(['read']);
 
+        // --- 4. TAMAM ROLES (CUSTOM BHI) SIRF YAHAN DEFINE HOTE HAIN ---
         Jetstream::role('admin', 'Administrator', [
             'create',
             'read',
@@ -79,5 +73,15 @@ class JetstreamServiceProvider extends ServiceProvider
             'create',
             'update',
         ])->description('Editor users have the ability to read, create, and update.');
+
+        Jetstream::role('work-bees', 'Work-Bees', [
+            'read',
+            'update-yellow',
+        ])->description('Can edit project prioritization (Yellow).');
+
+        Jetstream::role('developer', 'Developer', [
+            'read',
+            'update-red',
+        ])->description('Can edit project costs (Red).');
     }
 }

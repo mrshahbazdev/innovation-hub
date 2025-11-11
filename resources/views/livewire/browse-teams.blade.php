@@ -10,6 +10,15 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                 <div class="p-6 sm:p-8">
+
+                    <!-- === YEH NAYA SECTION ADD KAREIN === -->
+                    @if (session('error'))
+                        <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md" role="alert">
+                            <span class="block sm:inline">{{ session('error') }}</span>
+                        </div>
+                    @endif
+                    <!-- === YAHAN TAK === -->
+
                     <h3 class="text-2xl font-semibold text-gray-900 mb-6">Available Teams</h3>
 
                     <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -18,19 +27,13 @@
                                 <div class="w-full flex items-center justify-between p-6 space-x-6">
                                     <div class="flex-1 truncate">
                                         <div class="flex items-center space-x-3">
-
-                                            {{-- === YEH RAHA NAYA LOGIC === --}}
                                             @if(in_array($team->id, $myTeamIds))
-                                                {{-- Agar member hai, toh link dikhayein --}}
                                                 <a href="{{ route('teams.view', $team) }}" class="text-indigo-600 hover:text-indigo-900 text-lg font-medium truncate">
                                                     {{ $team->name }}
                                                 </a>
                                             @else
-                                                {{-- Agar member nahi hai, toh saada text dikhayein --}}
                                                 <h3 class="text-gray-900 text-lg font-medium truncate">{{ $team->name }}</h3>
                                             @endif
-                                            {{-- === NAYA LOGIC YAHAN KHATAM HOTA HAI === --}}
-
                                         </div>
                                         <p class="mt-1 text-gray-500 text-sm truncate">
                                             Owned by: {{ $team->owner->name }}
@@ -40,19 +43,15 @@
                                 <div>
                                     <div class="flex -mt-px divide-x divide-gray-200">
 
-                                        {{-- Join / Leave Button Logic --}}
                                         @if(in_array($team->id, $myTeamIds))
-                                            {{-- User is already a member --}}
 
                                             @if(auth()->user()->current_team_id == $team->id)
-                                                {{-- This is the user's ACTIVE team --}}
                                                 <div class="flex-1 flex">
                                                     <span class="relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg bg-gray-100">
                                                         (Your Active Team)
                                                     </span>
                                                 </div>
                                             @else
-                                                {{-- Member, but not active team (Can Leave) --}}
                                                 <div class="flex-1 flex">
                                                     <button wire:click="leaveTeam({{ $team->id }})"
                                                             wire:loading.attr="disabled"
@@ -63,7 +62,6 @@
                                             @endif
 
                                         @else
-                                            {{-- User is NOT a member (Can Join) --}}
                                             <div class="flex-1 flex">
                                                 <button wire:click="joinTeam({{ $team->id }})"
                                                         wire:loading.attr="disabled"
