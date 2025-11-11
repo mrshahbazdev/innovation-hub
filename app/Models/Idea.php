@@ -63,4 +63,27 @@ class Idea extends Model
     {
         return $this->hasMany(IdeaComment::class)->orderBy('created_at', 'desc');
     }
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Yeh 'saving' event har create() aur update() se pehle chalega
+        static::saving(function ($idea) {
+
+            // 1. Errors se bachne ke liye values ko number bana lein
+            $kosten = is_numeric($idea->kosten) ? $idea->kosten : 0;
+            $dauer = is_numeric($idea->dauer) ? $idea->dauer : 0;
+            $schmerz = is_numeric($idea->schmerz) ? $idea->schmerz : 0;
+
+            // 2. FORMULA 1: Prio 1 = (Kosten / 100) + Dauer
+            $prio1 = ($kosten / 100) + $dauer;
+
+            // 3. FORMULA 2: Prio 2 = Schmerz * Prio 1
+            $prio2 = $schmerz * $prio1;
+
+            // 4. Model par nayi (calculated) values set karein
+            $idea->prio_1 = $prio1;
+            $idea->prio_2 = $prio2;
+        });
+    }
 }

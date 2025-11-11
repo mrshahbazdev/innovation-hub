@@ -23,8 +23,6 @@ class IdeaPipeline extends Component
     public $loesung;
     public $kosten;
     public $dauer;
-    public $prio_1;
-    public $prio_2;
     public $umsetzung;
     public $status;
 
@@ -55,8 +53,6 @@ class IdeaPipeline extends Component
             $this->loesung = $idea->loesung;
             $this->kosten = $idea->kosten;
             $this->dauer = $idea->dauer;
-            $this->prio_1 = $idea->prio_1;
-            $this->prio_2 = $idea->prio_2;
             $this->umsetzung = $idea->umsetzung;
             $this->status = $idea->status;
 
@@ -102,8 +98,8 @@ class IdeaPipeline extends Component
         if ($user->hasTeamPermission($team, 'update-yellow') || $user->is_admin) {
             $validated = $this->validate([
                 'schmerz' => 'nullable|integer|min:0|max:10',
-                'prio_1' => 'nullable|numeric',
-                'prio_2' => 'nullable|numeric',
+                // 'prio_1' => 'nullable|numeric',
+                // 'prio_2' => 'nullable|numeric',
                 'umsetzung' => 'nullable|integer|min:0',
                 'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
             ]);

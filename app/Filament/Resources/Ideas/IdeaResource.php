@@ -64,9 +64,13 @@ class IdeaResource extends Resource
                     ->numeric()
                     ->default(0),
                 TextInput::make('prio_1')
-                    ->numeric(),
+                    ->numeric()
+                    ->readOnly()
+                    ->disabled(),
                 TextInput::make('prio_2')
-                    ->numeric(),
+                    ->numeric()
+                    ->readOnly()
+                    ->disabled(),
                 TextInput::make('umsetzung')
                     ->numeric(),
                 Textarea::make('loesung')
