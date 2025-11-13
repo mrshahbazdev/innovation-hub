@@ -63,6 +63,7 @@ class Idea extends Model
     {
         return $this->hasMany(IdeaComment::class)->orderBy('created_at', 'desc');
     }
+
     protected static function boot()
     {
         parent::boot();
@@ -78,8 +79,9 @@ class Idea extends Model
             // 2. FORMULA 1: Prio 1 = (Kosten / 100) + Dauer
             $prio1 = ($kosten / 100) + $dauer;
 
-            // 3. FORMULA 2: Prio 2 = Schmerz * Prio 1
-            $prio2 = $schmerz * $prio1;
+            // 3. FORMULA 2: Prio 2 = Prio 1 / Schmerz
+            // Division by zero se bachne ke liye check karein
+            $prio2 = ($schmerz > 0) ? ($prio1 / $schmerz) : 0;
 
             // 4. Model par nayi (calculated) values set karein
             $idea->prio_1 = $prio1;
