@@ -45,34 +45,30 @@ class IdeaPipeline extends Component
      * "Edit" button dabane par
      */
     public function editIdea($ideaId)
-    {
-        dd('Edit Idea called', $ideaId);
+{
+    try {
+        $idea = Idea::find($ideaId);
 
-        try {
-            $idea = Idea::find($ideaId);
-
-            if (!$idea) {
-                session()->flash('error', 'Idea not found.');
-                return;
-            }
-
-            dd('Idea found:', $idea);
-
-            $this->editingIdeaId = $ideaId;
-            $this->schmerz = $idea->schmerz ?? 0;
-            $this->loesung = $idea->loesung ?? '';
-            $this->kosten = $idea->kosten ?? 0;
-            $this->dauer = $idea->dauer ?? 0;
-            $this->umsetzung = $idea->umsetzung ?? 0;
-            $this->status = $idea->status ?? 'new';
-            $this->problem_short = $idea->problem_short ?? '';
-            $this->goal = $idea->goal ?? '';
-            $this->problem_detail = $idea->problem_detail ?? '';
-
-        } catch (\Exception $e) {
-            dd('Error:', $e->getMessage(), $e->getFile(), $e->getLine());
+        if (!$idea) {
+            dd('Idea not found');
+            return;
         }
+
+        dd('Idea details:', [
+            'id' => $idea->id,
+            'problem_short' => $idea->problem_short,
+            'goal' => $idea->goal,
+            'problem_detail' => $idea->problem_detail,
+            'schmerz' => $idea->schmerz,
+            'status' => $idea->status
+        ]);
+
+        // Baaki code...
+
+    } catch (\Exception $e) {
+        dd('Error in editIdea:', $e->getMessage());
     }
+}
 
     /**
      * "Cancel" button dabane par
