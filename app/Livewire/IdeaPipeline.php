@@ -19,34 +19,44 @@ class IdeaPipeline extends Component
     public $sortDir = 'asc';
 
     // --- FORM PROPERTIES ---
-    public $schmerz = '';
-    public $loesung = '';
-    public $kosten = '';
-    public $dauer = '';
-    public $umsetzung = '';
-    public $status = '';
+    public $schmerz;
+    public $loesung;
+    public $kosten;
+    public $dauer;
+    public $umsetzung;
+    public $status;
 
-    // --- NAYI PROPERTIES ---
-    public $problem_short = '';
-    public $goal = '';
-    public $problem_detail = '';
+    // --- 1. NAYI PROPERTIES ADD HUI HAIN ---
+    public $problem_short;
+    public $goal;
+    public $problem_detail;
 
-    // --- HOOKS ---
-    public function updatingSearch() { $this->resetPage(); }
-    public function updatingFilterStatus() { $this->resetPage(); }
+    // --- HOOKS (Pagination reset karne ke liye) ---
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterStatus()
+    {
+        $this->resetPage();
+    }
 
     /**
      * "Edit" button dabane par
      */
     public function editIdea($ideaId)
     {
+        dd('Edit Idea called', $ideaId);
+
         try {
-            $idea = Idea::with('team')->find($ideaId);
+            $idea = Idea::find($ideaId);
 
             if (!$idea) {
                 session()->flash('error', 'Idea not found.');
                 return;
             }
+
+            dd('Idea found:', $idea);
 
             $this->editingIdeaId = $ideaId;
             $this->schmerz = $idea->schmerz ?? 0;
@@ -60,7 +70,7 @@ class IdeaPipeline extends Component
             $this->problem_detail = $idea->problem_detail ?? '';
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Error loading idea: ' . $e->getMessage());
+            dd('Error:', $e->getMessage(), $e->getFile(), $e->getLine());
         }
     }
 
@@ -71,8 +81,6 @@ class IdeaPipeline extends Component
     {
         $this->resetErrorBag();
         $this->editingIdeaId = null;
-        $this->reset(['schmerz', 'loesung', 'kosten', 'dauer', 'umsetzung', 'status',
-                     'problem_short', 'goal', 'problem_detail']);
     }
 
     /**
@@ -80,79 +88,51 @@ class IdeaPipeline extends Component
      */
     public function saveIdea($ideaId)
     {
-        try {
-            $idea = Idea::with('team')->find($ideaId);
-            if (!$idea) {
-                session()->flash('error', 'Idea not found.');
-                return;
-            }
+        $idea = Idea::find($ideaId);
+        if (!$idea) { return; }
 
-            $user = auth()->user();
-            $team = $idea->team;
-            $dataToSave = [];
+        $user = auth()->user();
+        $team = $user->currentTeam;
+        $dataToSave = [];
 
-            // --- ADMIN KO SAB KARNE KI PERMISSION ---
-            if ($user->is_admin) {
-                $validated = $this->validate([
-                    'problem_short' => 'required|string|max:100',
-                    'goal' => 'required|string|min:10',
-                    'problem_detail' => 'required|string|min:20',
-                    'schmerz' => 'nullable|integer|min:0|max:10',
-                    'umsetzung' => 'nullable|integer|min:0',
-                    'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
-                    'loesung' => 'nullable|string|max:1000',
-                    'kosten' => 'nullable|numeric|min:0',
-                    'dauer' => 'nullable|integer|min:0',
-                ]);
-                $dataToSave = array_merge($dataToSave, $validated);
-            }
-            // --- OWNER APNI IDEA EDIT KAR SAKTA HAI ---
-            else if ($user->id === $idea->user_id) {
-                $validated = $this->validate([
-                    'problem_short' => 'required|string|max:100',
-                    'goal' => 'required|string|min:10',
-                    'problem_detail' => 'required|string|min:20',
-                ]);
-                $dataToSave = array_merge($dataToSave, $validated);
-            }
-            // --- TEAM PERMISSIONS ---
-            else {
-                // Team "Work-Bees" (Yellow) permissions
-                if ($team && $user->hasTeamPermission($team, 'update-yellow')) {
-                    $validated = $this->validate([
-                        'schmerz' => 'nullable|integer|min:0|max:10',
-                        'umsetzung' => 'nullable|integer|min:0',
-                        'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
-                    ]);
-                    $dataToSave = array_merge($dataToSave, $validated);
-                }
-
-                // Team "Developer" (Red) permissions
-                if ($team && $user->hasTeamPermission($team, 'update-red')) {
-                    $validated = $this->validate([
-                        'loesung' => 'nullable|string|max:1000',
-                        'kosten' => 'nullable|numeric|min:0',
-                        'dauer' => 'nullable|integer|min:0',
-                    ]);
-                    $dataToSave = array_merge($dataToSave, $validated);
-                }
-            }
-
-            if (!empty($dataToSave)) {
-                $idea->update($dataToSave);
-                session()->flash('message', 'Idea updated successfully.');
-            } else {
-                session()->flash('error', 'No changes to save or no permission to edit.');
-            }
-
-            $this->editingIdeaId = null;
-            $this->resetErrorBag();
-            $this->reset(['schmerz', 'loesung', 'kosten', 'dauer', 'umsetzung', 'status',
-                         'problem_short', 'goal', 'problem_detail']);
-
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error saving idea: ' . $e->getMessage());
+        // --- 3. NAYA LOGIC: Admin ya Owner core details edit kar sakta hai ---
+        if ($user->is_admin || $user->id === $idea->user_id) {
+            $validated = $this->validate([
+                'problem_short' => 'required|string|max:100',
+                'goal' => 'required|string|min:10',
+                'problem_detail' => 'required|string|min:20',
+            ]);
+            $dataToSave = array_merge($dataToSave, $validated);
         }
+
+        // Team "Work-Bees" (Yellow) permissions
+        if ($user->hasTeamPermission($team, 'update-yellow') || $user->is_admin) {
+            $validated = $this->validate([
+                'schmerz' => 'nullable|integer|min:0|max:10',
+                // 'prio_1' => 'nullable|numeric',
+                // 'prio_2' => 'nullable|numeric',
+                'umsetzung' => 'nullable|integer|min:0',
+                'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
+            ]);
+            $dataToSave = array_merge($dataToSave, $validated);
+        }
+
+        // Team "Developer" (Red) permissions
+        if ($user->hasTeamPermission($team, 'update-red') || $user->is_admin) {
+            $validated = $this->validate([
+                'loesung' => 'nullable|string|max:1000',
+                'kosten' => 'nullable|numeric|min:0',
+                'dauer' => 'nullable|integer|min:0',
+            ]);
+            $dataToSave = array_merge($dataToSave, $validated);
+        }
+
+        if (!empty($dataToSave)) {
+            $idea->update($dataToSave);
+        }
+
+        $this->editingIdeaId = null;
+        $this->resetErrorBag();
     }
 
     /**
@@ -161,13 +141,11 @@ class IdeaPipeline extends Component
     public function deleteIdea($ideaId)
     {
         $idea = Idea::find($ideaId);
-        if (!$idea) {
-            session()->flash('error', 'Idea not found.');
-            return;
-        }
+        if (!$idea) { return; }
 
         $user = auth()->user();
 
+        // Sirf idea ka owner YA Super Admin hi delete kar sakta hai
         if ($user->id === $idea->user_id || $user->is_admin) {
             $idea->delete();
             session()->flash('message', 'Idea deleted successfully.');
@@ -199,8 +177,7 @@ class IdeaPipeline extends Component
         if ($this->search) {
             $ideasQuery->where(function($query) {
                 $query->where('problem_short', 'like', '%'.$this->search.'%')
-                      ->orWhere('problem_detail', 'like', '%'.$this->search.'%')
-                      ->orWhere('goal', 'like', '%'.$this->search.'%');
+                      ->orWhere('problem_detail', 'like', '%'.$this->search.'%');
             });
         }
 
