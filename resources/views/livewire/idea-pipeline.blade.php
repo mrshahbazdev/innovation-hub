@@ -101,26 +101,31 @@
                                 $user = auth()->user();
                                 $userTeam = $user->currentTeam;
 
-                                // Permission checks
-                                $isAdmin = $user->is_admin;
+                                // Permission checks - DONO CONDITIONS CHECK KAREN
+                                $isAdmin = $user->is_admin; // Database admin field
+                                $isAdministrator = $userTeam && $user->hasTeamRole($userTeam, 'admin'); // Jetstream Administrator role
+
+                                // Overall admin status
+                                $isOverallAdmin = $isAdmin || $isAdministrator;
+
                                 $isIdeaOwner = $user->id === $idea->user_id;
                                 $hasYellowPermission = $userTeam && $user->hasTeamPermission($userTeam, 'update-yellow');
                                 $hasRedPermission = $userTeam && $user->hasTeamPermission($userTeam, 'update-red');
 
                                 // Can edit core details (admin or owner)
-                                $canEditCore = $isAdmin || $isIdeaOwner;
+                                $canEditCore = $isOverallAdmin || $isIdeaOwner;
 
                                 // Can edit yellow fields (admin or work-bees)
-                                $canEditYellow = $isAdmin || $hasYellowPermission;
+                                $canEditYellow = $isOverallAdmin || $hasYellowPermission;
 
                                 // Can edit red fields (admin or developer)
-                                $canEditRed = $isAdmin || $hasRedPermission;
+                                $canEditRed = $isOverallAdmin || $hasRedPermission;
 
                                 // Overall can edit anything
                                 $canEditAnything = $canEditCore || $canEditYellow || $canEditRed;
 
                                 // Can delete (admin or owner)
-                                $canDelete = $isAdmin || $isIdeaOwner;
+                                $canDelete = $isOverallAdmin || $isIdeaOwner;
                             @endphp
 
                             <tr wire:key="desktop-{{ $idea->id }}">
@@ -254,26 +259,31 @@
                 $user = auth()->user();
                 $userTeam = $user->currentTeam;
 
-                // Permission checks
-                $isAdmin = $user->is_admin;
+                // Permission checks - DONO CONDITIONS CHECK KAREN
+                $isAdmin = $user->is_admin; // Database admin field
+                $isAdministrator = $userTeam && $user->hasTeamRole($userTeam, 'admin'); // Jetstream Administrator role
+
+                // Overall admin status
+                $isOverallAdmin = $isAdmin || $isAdministrator;
+
                 $isIdeaOwner = $user->id === $idea->user_id;
                 $hasYellowPermission = $userTeam && $user->hasTeamPermission($userTeam, 'update-yellow');
                 $hasRedPermission = $userTeam && $user->hasTeamPermission($userTeam, 'update-red');
 
                 // Can edit core details (admin or owner)
-                $canEditCore = $isAdmin || $isIdeaOwner;
+                $canEditCore = $isOverallAdmin || $isIdeaOwner;
 
                 // Can edit yellow fields (admin or work-bees)
-                $canEditYellow = $isAdmin || $hasYellowPermission;
+                $canEditYellow = $isOverallAdmin || $hasYellowPermission;
 
                 // Can edit red fields (admin or developer)
-                $canEditRed = $isAdmin || $hasRedPermission;
+                $canEditRed = $isOverallAdmin || $hasRedPermission;
 
                 // Overall can edit anything
                 $canEditAnything = $canEditCore || $canEditYellow || $canEditRed;
 
                 // Can delete (admin or owner)
-                $canDelete = $isAdmin || $isIdeaOwner;
+                $canDelete = $isOverallAdmin || $isIdeaOwner;
             @endphp
 
             <div wire:key="mobile-{{ $idea->id }}" class="bg-white shadow rounded-lg p-4">
