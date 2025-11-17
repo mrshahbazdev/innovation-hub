@@ -173,12 +173,10 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-yellow-50">
-                                    {{-- Prio 1 ab hamesha read-only hai --}}
-                                    {{ $idea->prio_1 ?? '---' }}
+                                    {{ number_format($idea->prio_1, 2) ?? '---' }}
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-yellow-50">
-                                    {{-- Prio 2 ab hamesha read-only hai --}}
-                                    {{ $idea->prio_2 ?? '---' }}
+                                    {{ number_format($idea->prio_2, 2) ?? '---' }}
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm font-bold text-gray-900 bg-yellow-50">
                                     @if ($editingIdeaId === $idea->id)
