@@ -75,31 +75,35 @@ class IdeaPipeline extends Component
     /**
      * "Save" button dabane par
      */
+    /**
+     * "Save" button dabane par
+     */
     public function saveIdea($ideaId)
     {
         $idea = Idea::find($ideaId);
         if (!$idea) { return; }
 
         $user = auth()->user();
-        $team = $user->currentTeam;
+
+        // YEH LINE THEK KAREN: team idea wali team se leni hai, user ki current team se nahi
+        $team = $idea->team; // <-- YAHAN CHANGE KARNA HAI
         $dataToSave = [];
 
-        // --- 3. NAYA LOGIC: Admin ya Owner core details edit kar sakta hai ---
+        // --- Admin ya Owner core details edit kar sakta hai ---
         if ($user->is_admin || $user->id === $idea->user_id) {
             $validated = $this->validate([
                 'problem_short' => 'required|string|max:100',
-                'goal' => 'required|string|min:10',
+                'goal' => 'required|string|min:10', // <-- YEH BHI ADD KAREN
                 'problem_detail' => 'required|string|min:20',
             ]);
             $dataToSave = array_merge($dataToSave, $validated);
         }
 
         // Team "Work-Bees" (Yellow) permissions
-        if ($user->hasTeamPermission($team, 'update-yellow') || $user->is_admin) {
+        // YAHAN BHI $team IDEA KI TEAM USE KAREN
+        if (($team && $user->hasTeamPermission($team, 'update-yellow')) || $user->is_admin) {
             $validated = $this->validate([
                 'schmerz' => 'nullable|integer|min:0|max:10',
-                // 'prio_1' => 'nullable|numeric',
-                // 'prio_2' => 'nullable|numeric',
                 'umsetzung' => 'nullable|integer|min:0',
                 'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
             ]);
@@ -107,7 +111,8 @@ class IdeaPipeline extends Component
         }
 
         // Team "Developer" (Red) permissions
-        if ($user->hasTeamPermission($team, 'update-red') || $user->is_admin) {
+        // YAHAN BHI $team IDEA KI TEAM USE KAREN
+        if (($team && $user->hasTeamPermission($team, 'update-red')) || $user->is_admin) {
             $validated = $this->validate([
                 'loesung' => 'nullable|string|max:1000',
                 'kosten' => 'nullable|numeric|min:0',
