@@ -6,7 +6,7 @@ use Livewire\Component;
 use App\Models\Idea;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
-
+use Illuminate\Support\Facades\Log;
 #[Layout('layouts.app')]
 class IdeaPipeline extends Component
 {
@@ -46,20 +46,40 @@ class IdeaPipeline extends Component
      */
     public function editIdea($ideaId)
     {
-        $idea = Idea::find($ideaId);
-        if ($idea) {
-            $this->editingIdeaId = $ideaId;
-            $this->schmerz = $idea->schmerz;
-            $this->loesung = $idea->loesung;
-            $this->kosten = $idea->kosten;
-            $this->dauer = $idea->dauer;
-            $this->umsetzung = $idea->umsetzung;
-            $this->status = $idea->status;
+        try {
+            \Log::info('Edit Idea called', ['idea_id' => $ideaId]);
 
-            // --- 2. NAYI PROPERTIES LOAD HONGY ---
-            $this->problem_short = $idea->problem_short;
-            $this->goal = $idea->goal;
-            $this->problem_detail = $idea->problem_detail;
+            $idea = Idea::with(['team', 'user'])->find($ideaId);
+
+            if (!$idea) {
+                \Log::error('Idea not found', ['idea_id' => $ideaId]);
+                return;
+            }
+
+            \Log::info('Idea found', ['idea_id' => $ideaId, 'team_id' => $idea->team_id]);
+
+            $this->editingIdeaId = $ideaId;
+            $this->schmerz = $idea->schmerz ?? 0;
+            $this->loesung = $idea->loesung ?? '';
+            $this->kosten = $idea->kosten ?? 0;
+            $this->dauer = $idea->dauer ?? 0;
+            $this->umsetzung = $idea->umsetzung ?? 0;
+            $this->status = $idea->status ?? 'new';
+
+            // YEH PROPERTIES PEHLE SE EXISTING HAIN
+            $this->problem_short = $idea->problem_short ?? '';
+            $this->goal = $idea->goal ?? '';
+            $this->problem_detail = $idea->problem_detail ?? '';
+
+            \Log::info('Edit Idea completed successfully');
+
+        } catch (\Exception $e) {
+            \Log::error('Edit Idea error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            session()->flash('error', 'Error loading idea: ' . $e->getMessage());
         }
     }
 
