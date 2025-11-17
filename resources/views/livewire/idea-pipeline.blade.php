@@ -97,9 +97,35 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($ideas as $idea)
+                            @php
+                                $user = auth()->user();
+                                $userTeam = $user->currentTeam;
+
+                                // Permission checks
+                                $isAdmin = $user->is_admin;
+                                $isIdeaOwner = $user->id === $idea->user_id;
+                                $hasYellowPermission = $userTeam && $user->hasTeamPermission($userTeam, 'update-yellow');
+                                $hasRedPermission = $userTeam && $user->hasTeamPermission($userTeam, 'update-red');
+
+                                // Can edit core details (admin or owner)
+                                $canEditCore = $isAdmin || $isIdeaOwner;
+
+                                // Can edit yellow fields (admin or work-bees)
+                                $canEditYellow = $isAdmin || $hasYellowPermission;
+
+                                // Can edit red fields (admin or developer)
+                                $canEditRed = $isAdmin || $hasRedPermission;
+
+                                // Overall can edit anything
+                                $canEditAnything = $canEditCore || $canEditYellow || $canEditRed;
+
+                                // Can delete (admin or owner)
+                                $canDelete = $isAdmin || $isIdeaOwner;
+                            @endphp
+
                             <tr wire:key="desktop-{{ $idea->id }}">
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
+                                    @if ($this->editingIdeaId === $idea->id && $canEditCore)
                                         <input type="text" wire:model="problem_short" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
                                         @error('problem_short') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
@@ -108,7 +134,7 @@
                                         </a>
                                     @endif
 
-                                    @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
+                                    @if ($this->editingIdeaId === $idea->id && $canEditCore)
                                         <textarea wire:model="problem_detail" class="mt-2 block w-full border-gray-300 rounded-md shadow-sm text-sm" rows="2"></textarea>
                                         @error('problem_detail') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
@@ -116,10 +142,8 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    @if ($this->editingIdeaId === $idea->id)
-                                        <select wire:model="status"
-                                                class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                                                {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-yellow')) --}}>
+                                    @if ($this->editingIdeaId === $idea->id && $canEditYellow)
+                                        <select wire:model="status" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
                                             <option value="new">New</option>
                                             <option value="pending_review">Pending Review</option>
                                             <option value="pending_pricing">Pending Pricing</option>
@@ -141,32 +165,32 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-yellow-50">
-                                    @if ($this->editingIdeaId === $idea->id)
-                                        <input type="number" wire:model="schmerz" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-yellow')) --}}>
+                                    @if ($this->editingIdeaId === $idea->id && $canEditYellow)
+                                        <input type="number" wire:model="schmerz" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm">
                                         @error('schmerz') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->schmerz ?? '---' }}
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 text-sm text-gray-500 bg-red-50">
-                                    @if ($this->editingIdeaId === $idea->id)
-                                        <textarea wire:model="loesung" class="block w-full border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-red')) --}}></textarea>
+                                    @if ($this->editingIdeaId === $idea->id && $canEditRed)
+                                        <textarea wire:model="loesung" class="block w-full border-gray-300 rounded-md shadow-sm text-sm"></textarea>
                                         @error('loesung') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->loesung ?? '---' }}
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-red-50">
-                                    @if ($this->editingIdeaId === $idea->id)
-                                        <input type="text" wire:model="kosten" class="block w-24 border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-red')) --}}>
+                                    @if ($this->editingIdeaId === $idea->id && $canEditRed)
+                                        <input type="text" wire:model="kosten" class="block w-24 border-gray-300 rounded-md shadow-sm text-sm">
                                         @error('kosten') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         ${{ number_format($idea->kosten, 2) ?? '---' }}
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-red-50">
-                                    @if ($this->editingIdeaId === $idea->id)
-                                        <input type="number" wire:model="dauer" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-red')) --}}>
+                                    @if ($this->editingIdeaId === $idea->id && $canEditRed)
+                                        <input type="number" wire:model="dauer" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm">
                                         @error('dauer') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->dauer ?? '---' }} days
@@ -179,8 +203,8 @@
                                     {{ number_format($idea->prio_2, 2) ?? '---' }}
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm font-bold text-gray-900 bg-yellow-50">
-                                    @if ($this->editingIdeaId === $idea->id)
-                                        <input type="number" wire:model="umsetzung" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-yellow')) --}}>
+                                    @if ($this->editingIdeaId === $idea->id && $canEditYellow)
+                                        <input type="number" wire:model="umsetzung" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm">
                                         @error('umsetzung') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
                                         {{ $idea->umsetzung ?? '---' }}
@@ -192,17 +216,6 @@
                                         <button wire:click="saveIdea({{ $idea->id }})" class="text-green-600 hover:text-green-900">Save</button>
                                         <button wire:click="cancelEdit" class="text-gray-600 hover:text-gray-900 ml-2">Cancel</button>
                                     @else
-                                        @php
-                                            $user = auth()->user();
-
-                                            $canEditAnything = $user->is_admin ||
-                                                               $user->id === $idea->user_id ||
-                                                               ($idea->team && $user->hasTeamPermission($idea->team, 'update-yellow')) ||
-                                                               ($idea->team && $user->hasTeamPermission($idea->team, 'update-red'));
-
-                                            $canDelete = $user->is_admin || $user->id === $idea->user_id;
-                                        @endphp
-
                                         @if ($canEditAnything)
                                             <button wire:click="editIdea({{ $idea->id }})" class="text-indigo-600 hover:text-indigo-900">Edit</button>
                                         @endif
@@ -237,13 +250,37 @@
 
     <div class="block sm:hidden p-4 space-y-4">
         @forelse ($ideas as $idea)
+            @php
+                $user = auth()->user();
+                $userTeam = $user->currentTeam;
+
+                // Permission checks
+                $isAdmin = $user->is_admin;
+                $isIdeaOwner = $user->id === $idea->user_id;
+                $hasYellowPermission = $userTeam && $user->hasTeamPermission($userTeam, 'update-yellow');
+                $hasRedPermission = $userTeam && $user->hasTeamPermission($userTeam, 'update-red');
+
+                // Can edit core details (admin or owner)
+                $canEditCore = $isAdmin || $isIdeaOwner;
+
+                // Can edit yellow fields (admin or work-bees)
+                $canEditYellow = $isAdmin || $hasYellowPermission;
+
+                // Can edit red fields (admin or developer)
+                $canEditRed = $isAdmin || $hasRedPermission;
+
+                // Overall can edit anything
+                $canEditAnything = $canEditCore || $canEditYellow || $canEditRed;
+
+                // Can delete (admin or owner)
+                $canDelete = $isAdmin || $isIdeaOwner;
+            @endphp
+
             <div wire:key="mobile-{{ $idea->id }}" class="bg-white shadow rounded-lg p-4">
                 <div class="flex justify-between items-center mb-3">
                     <div>
-                        @if ($this->editingIdeaId === $idea->id)
-                            <select wire:model="status"
-                                    class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
-                                    {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-yellow')) --}}>
+                        @if ($this->editingIdeaId === $idea->id && $canEditYellow)
+                            <select wire:model="status" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
                                 <option value="new">New</option>
                                 <option value="pending_review">Pending Review</option>
                                 <option value="pending_pricing">Pending Pricing</option>
@@ -270,17 +307,6 @@
                             <button wire:click="saveIdea({{ $idea->id }})" class="text-green-600 hover:text-green-900 text-sm font-medium">Save</button>
                             <button wire:click="cancelEdit" class="text-gray-600 hover:text-gray-900 ml-2 text-sm font-medium">Cancel</button>
                         @else
-                            @php
-                                $user = auth()->user();
-
-                                $canEditAnything = $user->is_admin ||
-                                                   $user->id === $idea->user_id ||
-                                                   ($idea->team && $user->hasTeamPermission($idea->team, 'update-yellow')) ||
-                                                   ($idea->team && $user->hasTeamPermission($idea->team, 'update-red'));
-
-                                $canDelete = $user->is_admin || $user->id === $idea->user_id;
-                            @endphp
-
                             @if ($canEditAnything)
                                 <button wire:click="editIdea({{ $idea->id }})" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">Edit</button>
                             @endif
@@ -298,7 +324,7 @@
                 </div>
 
                 <div class="mb-3">
-                    @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
+                    @if ($this->editingIdeaId === $idea->id && $canEditCore)
                         <div>
                             <label class="block text-xs font-medium text-gray-700">Problem</label>
                             <input type="text" wire:model="problem_short" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
@@ -310,7 +336,7 @@
                         </a>
                     @endif
 
-                    @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
+                    @if ($this->editingIdeaId === $idea->id && $canEditCore)
                          <div class="mt-2">
                             <label class="block text-xs font-medium text-gray-700">Details</label>
                             <textarea wire:model="problem_detail" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" rows="3"></textarea>
@@ -323,7 +349,7 @@
 
                 @if ($this->editingIdeaId === $idea->id)
                     <div class="border-t pt-4 mt-4 grid grid-cols-2 gap-4">
-                        @if (auth()->user()->is_admin || auth()->user()->id === $idea->user_id)
+                        @if ($canEditCore)
                             <div class="col-span-2 space-y-2 p-2 bg-gray-50 rounded-md">
                                 <h4 class="font-medium text-sm text-gray-800">Core Details</h4>
                                 <div>
@@ -334,32 +360,40 @@
                             </div>
                         @endif
 
-                        <div class="space-y-2 p-2 bg-yellow-50 rounded-md">
-                            <h4 class="font-medium text-sm text-yellow-800">Prioritization</h4>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700">Schmerz</label>
-                                <input type="number" wire:model="schmerz" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-yellow')) --}}>
+                        @if ($canEditYellow)
+                            <div class="space-y-2 p-2 bg-yellow-50 rounded-md">
+                                <h4 class="font-medium text-sm text-yellow-800">Prioritization</h4>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Schmerz</label>
+                                    <input type="number" wire:model="schmerz" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Umsetzung</label>
+                                    <input type="number" wire:model="umsetzung" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700">Umsetzung</label>
-                                <input type="number" wire:model="umsetzung" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-yellow')) --}}>
+                        @endif
+
+                        @if ($canEditRed)
+                            <div class="space-y-2 p-2 bg-red-50 rounded-md">
+                                <h4 class="font-medium text-sm text-red-800">Development</h4>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Kosten</label>
+                                    <input type="text" wire:model="kosten" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700">Dauer</label>
+                                    <input type="number" wire:model="dauer" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                                </div>
                             </div>
-                        </div>
-                        <div class="space-y-2 p-2 bg-red-50 rounded-md">
-                            <h4 class="font-medium text-sm text-red-800">Development</h4>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700">Kosten</label>
-                                <input type="text" wire:model="kosten" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-red')) --}}>
+                        @endif
+
+                        @if ($canEditRed)
+                            <div class="col-span-2">
+                                <label class="block text-xs font-medium text-gray-700">Lösung</label>
+                                <textarea wire:model="loesung" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm"></textarea>
                             </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-700">Dauer</label>
-                                <input type="number" wire:model="dauer" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-red')) --}}>
-                            </div>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-xs font-medium text-gray-700">Lösung</label>
-                            <textarea wire:model="loesung" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" {{-- @disabled(!auth()->user()->is_admin && !auth()->user()->hasTeamPermission($idea->team, 'update-red')) --}}></textarea>
-                        </div>
+                        @endif
                     </div>
                 @else
                     <div class="border-t pt-4 mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
