@@ -99,10 +99,8 @@
                         @forelse ($ideas as $idea)
                             <tr wire:key="desktop-{{ $idea->id }}">
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    @php
-        dd('Problem short field - Idea:', $idea->id, 'Editing:', $this->editingIdeaId);
-    @endphp
-                                    @if ($editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
+
+                                    @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
                                         <input type="text" wire:model="problem_short" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
                                         @error('problem_short') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
