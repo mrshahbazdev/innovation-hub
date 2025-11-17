@@ -50,23 +50,26 @@ class IdeaPipeline extends Component
         $idea = Idea::find($ideaId);
 
         if (!$idea) {
-            dd('Idea not found');
+            session()->flash('error', 'Idea not found.');
             return;
         }
 
-        dd('Idea details:', [
-            'id' => $idea->id,
-            'problem_short' => $idea->problem_short,
-            'goal' => $idea->goal,
-            'problem_detail' => $idea->problem_detail,
-            'schmerz' => $idea->schmerz,
-            'status' => $idea->status
-        ]);
+        // Properties set karen
+        $this->editingIdeaId = $ideaId;
+        $this->schmerz = $idea->schmerz ?? 0;
+        $this->loesung = $idea->loesung ?? '';
+        $this->kosten = $idea->kosten ?? 0;
+        $this->dauer = $idea->dauer ?? 0;
+        $this->umsetzung = $idea->umsetzung ?? 0;
+        $this->status = $idea->status ?? 'new';
+        $this->problem_short = $idea->problem_short ?? '';
+        $this->goal = $idea->goal ?? '';
+        $this->problem_detail = $idea->problem_detail ?? '';
 
-        // Baaki code...
+        dd('All properties set successfully - Editing should work now');
 
     } catch (\Exception $e) {
-        dd('Error in editIdea:', $e->getMessage());
+        dd('Error in editIdea:', $e->getMessage(), $e->getFile(), $e->getLine());
     }
 }
 
