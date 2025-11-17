@@ -99,7 +99,6 @@
                         @forelse ($ideas as $idea)
                             <tr wire:key="desktop-{{ $idea->id }}">
                                 <td class="px-3 py-2 whitespace-nowrap">
-
                                     @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
                                         <input type="text" wire:model="problem_short" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
                                         @error('problem_short') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
@@ -109,7 +108,7 @@
                                         </a>
                                     @endif
 
-                                    @if ($editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
+                                    @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
                                         <textarea wire:model="problem_detail" class="mt-2 block w-full border-gray-300 rounded-md shadow-sm text-sm" rows="2"></textarea>
                                         @error('problem_detail') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
@@ -117,7 +116,7 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    @if ($editingIdeaId === $idea->id)
+                                    @if ($this->editingIdeaId === $idea->id)
                                         <select wire:model="status"
                                                 class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
                                                 @disabled(!auth()->user()->is_admin && !$idea->team?->hasUserWithPermission(auth()->user(), 'update-yellow'))>
@@ -142,7 +141,7 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-yellow-50">
-                                    @if ($editingIdeaId === $idea->id)
+                                    @if ($this->editingIdeaId === $idea->id)
                                         <input type="number" wire:model="schmerz" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !$idea->team?->hasUserWithPermission(auth()->user(), 'update-yellow'))>
                                         @error('schmerz') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
@@ -150,7 +149,7 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 text-sm text-gray-500 bg-red-50">
-                                    @if ($editingIdeaId === $idea->id)
+                                    @if ($this->editingIdeaId === $idea->id)
                                         <textarea wire:model="loesung" class="block w-full border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !$idea->team?->hasUserWithPermission(auth()->user(), 'update-red'))></textarea>
                                         @error('loesung') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
@@ -158,7 +157,7 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-red-50">
-                                    @if ($editingIdeaId === $idea->id)
+                                    @if ($this->editingIdeaId === $idea->id)
                                         <input type="text" wire:model="kosten" class="block w-24 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !$idea->team?->hasUserWithPermission(auth()->user(), 'update-red'))>
                                         @error('kosten') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
@@ -166,7 +165,7 @@
                                     @endif
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900 bg-red-50">
-                                    @if ($editingIdeaId === $idea->id)
+                                    @if ($this->editingIdeaId === $idea->id)
                                         <input type="number" wire:model="dauer" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !$idea->team?->hasUserWithPermission(auth()->user(), 'update-red'))>
                                         @error('dauer') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
@@ -180,7 +179,7 @@
                                     {{ number_format($idea->prio_2, 2) ?? '---' }}
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap text-sm font-bold text-gray-900 bg-yellow-50">
-                                    @if ($editingIdeaId === $idea->id)
+                                    @if ($this->editingIdeaId === $idea->id)
                                         <input type="number" wire:model="umsetzung" class="block w-20 border-gray-300 rounded-md shadow-sm text-sm" @disabled(!auth()->user()->is_admin && !$idea->team?->hasUserWithPermission(auth()->user(), 'update-yellow'))>
                                         @error('umsetzung') <span class="block text-red-500 text-xs">{{ $message }}</span> @enderror
                                     @else
@@ -189,7 +188,7 @@
                                 </td>
 
                                 <td class="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
-                                    @if ($editingIdeaId === $idea->id)
+                                    @if ($this->editingIdeaId === $idea->id)
                                         <button wire:click="saveIdea({{ $idea->id }})" class="text-green-600 hover:text-green-900">Save</button>
                                         <button wire:click="cancelEdit" class="text-gray-600 hover:text-gray-900 ml-2">Cancel</button>
                                     @else
@@ -237,13 +236,11 @@
     </div>
 
     <div class="block sm:hidden p-4 space-y-4">
-
         @forelse ($ideas as $idea)
             <div wire:key="mobile-{{ $idea->id }}" class="bg-white shadow rounded-lg p-4">
-
                 <div class="flex justify-between items-center mb-3">
                     <div>
-                        @if ($editingIdeaId === $idea->id)
+                        @if ($this->editingIdeaId === $idea->id)
                             <select wire:model="status"
                                     class="block w-full border-gray-300 rounded-md shadow-sm text-sm"
                                     @disabled(!auth()->user()->is_admin && !$idea->team?->hasUserWithPermission(auth()->user(), 'update-yellow'))>
@@ -269,7 +266,7 @@
                     </div>
 
                     <div class="flex-shrink-0">
-                        @if ($editingIdeaId === $idea->id)
+                        @if ($this->editingIdeaId === $idea->id)
                             <button wire:click="saveIdea({{ $idea->id }})" class="text-green-600 hover:text-green-900 text-sm font-medium">Save</button>
                             <button wire:click="cancelEdit" class="text-gray-600 hover:text-gray-900 ml-2 text-sm font-medium">Cancel</button>
                         @else
@@ -301,7 +298,7 @@
                 </div>
 
                 <div class="mb-3">
-                    @if ($editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
+                    @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
                         <div>
                             <label class="block text-xs font-medium text-gray-700">Problem</label>
                             <input type="text" wire:model="problem_short" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
@@ -313,7 +310,7 @@
                         </a>
                     @endif
 
-                    @if ($editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
+                    @if ($this->editingIdeaId === $idea->id && (auth()->user()->is_admin || auth()->user()->id === $idea->user_id))
                          <div class="mt-2">
                             <label class="block text-xs font-medium text-gray-700">Details</label>
                             <textarea wire:model="problem_detail" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm" rows="3"></textarea>
@@ -324,9 +321,8 @@
                     @endif
                 </div>
 
-                @if ($editingIdeaId === $idea->id)
+                @if ($this->editingIdeaId === $idea->id)
                     <div class="border-t pt-4 mt-4 grid grid-cols-2 gap-4">
-
                         @if (auth()->user()->is_admin || auth()->user()->id === $idea->user_id)
                             <div class="col-span-2 space-y-2 p-2 bg-gray-50 rounded-md">
                                 <h4 class="font-medium text-sm text-gray-800">Core Details</h4>
@@ -387,7 +383,6 @@
                         </div>
                     </div>
                 @endif
-
             </div>
         @empty
             <div class="text-center p-12">
