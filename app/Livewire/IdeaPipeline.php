@@ -18,7 +18,7 @@ class IdeaPipeline extends Component
     public $sortBy = 'status';
     public $sortDir = 'asc';
 
-    // --- FORM PROPERTIES (Empty values se initialize) ---
+    // --- FORM PROPERTIES ---
     public $schmerz = '';
     public $loesung = '';
     public $kosten = '';
@@ -26,21 +26,14 @@ class IdeaPipeline extends Component
     public $umsetzung = '';
     public $status = '';
 
-    // --- NAYI PROPERTIES (Empty values se initialize) ---
+    // --- NAYI PROPERTIES ---
     public $problem_short = '';
     public $goal = '';
     public $problem_detail = '';
 
-    // --- HOOKS (Pagination reset karne ke liye) ---
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingFilterStatus()
-    {
-        $this->resetPage();
-    }
+    // --- HOOKS ---
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatingFilterStatus() { $this->resetPage(); }
 
     /**
      * "Edit" button dabane par
@@ -56,16 +49,12 @@ class IdeaPipeline extends Component
             }
 
             $this->editingIdeaId = $ideaId;
-
-            // Properties ko safe way mein set karen
             $this->schmerz = $idea->schmerz ?? 0;
             $this->loesung = $idea->loesung ?? '';
             $this->kosten = $idea->kosten ?? 0;
             $this->dauer = $idea->dauer ?? 0;
             $this->umsetzung = $idea->umsetzung ?? 0;
             $this->status = $idea->status ?? 'new';
-
-            // NAYI PROPERTIES
             $this->problem_short = $idea->problem_short ?? '';
             $this->goal = $idea->goal ?? '';
             $this->problem_detail = $idea->problem_detail ?? '';
@@ -82,8 +71,6 @@ class IdeaPipeline extends Component
     {
         $this->resetErrorBag();
         $this->editingIdeaId = null;
-
-        // Properties ko reset karen
         $this->reset(['schmerz', 'loesung', 'kosten', 'dauer', 'umsetzung', 'status',
                      'problem_short', 'goal', 'problem_detail']);
     }
@@ -101,13 +88,26 @@ class IdeaPipeline extends Component
             }
 
             $user = auth()->user();
-
-            // YEH LINE THEK KARI HAI: team idea wali team se leni hai
             $team = $idea->team;
             $dataToSave = [];
 
-            // --- Admin ya Owner core details edit kar sakta hai ---
-            if ($user->is_admin || $user->id === $idea->user_id) {
+            // --- ADMIN KO SAB KARNE KI PERMISSION ---
+            if ($user->is_admin) {
+                $validated = $this->validate([
+                    'problem_short' => 'required|string|max:100',
+                    'goal' => 'required|string|min:10',
+                    'problem_detail' => 'required|string|min:20',
+                    'schmerz' => 'nullable|integer|min:0|max:10',
+                    'umsetzung' => 'nullable|integer|min:0',
+                    'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
+                    'loesung' => 'nullable|string|max:1000',
+                    'kosten' => 'nullable|numeric|min:0',
+                    'dauer' => 'nullable|integer|min:0',
+                ]);
+                $dataToSave = array_merge($dataToSave, $validated);
+            }
+            // --- OWNER APNI IDEA EDIT KAR SAKTA HAI ---
+            else if ($user->id === $idea->user_id) {
                 $validated = $this->validate([
                     'problem_short' => 'required|string|max:100',
                     'goal' => 'required|string|min:10',
@@ -115,27 +115,27 @@ class IdeaPipeline extends Component
                 ]);
                 $dataToSave = array_merge($dataToSave, $validated);
             }
+            // --- TEAM PERMISSIONS ---
+            else {
+                // Team "Work-Bees" (Yellow) permissions
+                if ($team && $user->hasTeamPermission($team, 'update-yellow')) {
+                    $validated = $this->validate([
+                        'schmerz' => 'nullable|integer|min:0|max:10',
+                        'umsetzung' => 'nullable|integer|min:0',
+                        'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
+                    ]);
+                    $dataToSave = array_merge($dataToSave, $validated);
+                }
 
-            // Team "Work-Bees" (Yellow) permissions
-            // YAHAN NULL CHECK ADD KIYA HAI
-            if (($team && $user->hasTeamPermission($team, 'update-yellow')) || $user->is_admin) {
-                $validated = $this->validate([
-                    'schmerz' => 'nullable|integer|min:0|max:10',
-                    'umsetzung' => 'nullable|integer|min:0',
-                    'status' => 'required|in:new,pending_review,pending_pricing,approved,rejected,completed',
-                ]);
-                $dataToSave = array_merge($dataToSave, $validated);
-            }
-
-            // Team "Developer" (Red) permissions
-            // YAHAN NULL CHECK ADD KIYA HAI
-            if (($team && $user->hasTeamPermission($team, 'update-red')) || $user->is_admin) {
-                $validated = $this->validate([
-                    'loesung' => 'nullable|string|max:1000',
-                    'kosten' => 'nullable|numeric|min:0',
-                    'dauer' => 'nullable|integer|min:0',
-                ]);
-                $dataToSave = array_merge($dataToSave, $validated);
+                // Team "Developer" (Red) permissions
+                if ($team && $user->hasTeamPermission($team, 'update-red')) {
+                    $validated = $this->validate([
+                        'loesung' => 'nullable|string|max:1000',
+                        'kosten' => 'nullable|numeric|min:0',
+                        'dauer' => 'nullable|integer|min:0',
+                    ]);
+                    $dataToSave = array_merge($dataToSave, $validated);
+                }
             }
 
             if (!empty($dataToSave)) {
@@ -147,8 +147,6 @@ class IdeaPipeline extends Component
 
             $this->editingIdeaId = null;
             $this->resetErrorBag();
-
-            // Properties ko reset karen
             $this->reset(['schmerz', 'loesung', 'kosten', 'dauer', 'umsetzung', 'status',
                          'problem_short', 'goal', 'problem_detail']);
 
@@ -170,7 +168,6 @@ class IdeaPipeline extends Component
 
         $user = auth()->user();
 
-        // Sirf idea ka owner YA Super Admin hi delete kar sakta hai
         if ($user->id === $idea->user_id || $user->is_admin) {
             $idea->delete();
             session()->flash('message', 'Idea deleted successfully.');
